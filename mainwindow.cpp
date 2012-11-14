@@ -291,9 +291,14 @@ void MainWindow::deleteSourcePath()
 
 void MainWindow::deleteDestPath()
 {
-    QModelIndex aIndex = ui->destTableView->currentIndex();
+    QItemSelectionModel* selModel = ui->destTableView->selectionModel();
 
-    tableModel->removeFilterPair(aIndex);
+    QModelIndexList indexList = selModel->selectedIndexes();
+    QModelIndex index;
+
+    foreach(index, indexList){
+        tableModel->removeFilterPair(index);
+    }
 }
 
 void MainWindow::editFilterPair()
