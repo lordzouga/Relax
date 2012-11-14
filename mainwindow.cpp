@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     //ui->deleteAction->setEnabled(false);
-    //ui->editAction->setEnabled(false);
+    //ui->ed
 
     connect(ui->browseSourcePathButton, SIGNAL(clicked()), this, SLOT(getSourcePath()));
     connect(ui->addSourcePathButton, SIGNAL(clicked()), this, SLOT(addSourcePath()));
