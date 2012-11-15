@@ -3,8 +3,10 @@
 #include <QString>
 #include "relaxengine.h"
 
-//static void copyFiles(CopyPair &aPair);
+static void copyFiles(CopyPair &aPair); /*copies the file contained in aPair.first to aPair.second and then removes
+                                         the file in aPair.first if copy was successful*/
 
+//static file definitions
 PathList RelaxEngine::paths = PathList();
 bool RelaxEngine::isCopying = false;
 bool RelaxEngine::pendingRefresh = false;
@@ -100,12 +102,6 @@ void RelaxEngine::formatString(QStringList &list, RelaxEngine::Mode aMode)
         }
 }
 
-void RelaxEngine::emitAdd(QString path)
-{
-    qDebug() << "adding to paths " << path;
-    watcher->addPath(path);
-    qDebug() << watcher->directories();
-}
 void RelaxEngine::setBaseFilePaths(const QString &aPath)
 {
     //set the path given by the user as the source file paths
