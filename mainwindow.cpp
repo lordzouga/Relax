@@ -11,11 +11,6 @@
 #include "rlistmodel.h"
 
 
-static void startFileCopy(){
-    RelaxEngine eng;
-    eng.prepareFileCopy();
-}
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -263,7 +258,8 @@ void MainWindow::addDestPath()
 
 void MainWindow::updateFolders()
 {
-    QtConcurrent::run(startFileCopy);
+    QString str;
+    QtConcurrent::run(engine, &RelaxEngine::refreshFolders, str);
 }
 
 void MainWindow::activateListView(QModelIndex aIndex)

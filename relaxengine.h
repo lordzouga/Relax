@@ -5,14 +5,13 @@
 #include <QPair>
 #include <QStringList>
 #include <QFutureWatcher>
-#include <QFileSystemWatcher>
 #include "watcherthread.h"
 
 typedef QPair<QString, QStringList> FilterPair;
 typedef QList<QPair<QString, QString> > CopyList;
 typedef QPair<QString, QString> CopyPair;
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct PathList{
 
     /*a simple data structure to hold the paths needed by the software*/
@@ -23,10 +22,14 @@ struct PathList{
                                  with the filters to indicate the type of files stored in them*/
 };
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class RelaxEngine : public QObject
-{
+{                                 /*this class by virtue should be instantiated only once throughout the
+                                    application. it contains the static data member "PathList::paths"
+                                    that holds the data to be used throughout the application. it contains
+                                    the utility function formatString() that is used for string manipulatio
+                                    ns outside the class.*/
     Q_OBJECT
     Q_ENUMS(Mode)
 public:
@@ -39,10 +42,6 @@ public:
 
     void setListPairs(const FilterPair &somePair);/*assigns somePair to paths.listPairs*/
 
-    void prepareFileCopy();/*this function should prepare the files given by the user for copying by filtering
-                           each path with each given filter, appending the found files to a QList of Qpairs
-                           then copying the files by applying copyFiles() on each item on the list  using
-                           QtConcurrent::map()*/
 
     QFutureWatcher<void>* getFutureWatcher();/*returns a pointer to the QFutureWatcher used for monitoring
                                                the progress of the file copy. it exits onlt once throughout
@@ -61,7 +60,7 @@ public:
 
 
     /*Public static member functions*/
-    static WatcherThread* getWatcher();/*returns the data member watcher*/
+    static WatcherThread* getWatcher();/*returns the data member WatcherThread watcher*/
 
     static QList<FilterPair> *getFilterPairs();/*returns paths.listpair. not used. prefer data manipulation
                                                  at the model*/
@@ -74,17 +73,23 @@ public:
                                            path filters. it modifies all the strings contained in "list"
                                            according to mode*/
 
-    static void addToWatcher(QString path);/*adds path to the FileSystem watcher*/
+private:
 
+    void prepareFileCopy();/*this function should prepare the files given by the user for copying by filterin
+                           each path with each given filter, appending the found files to a QList of Qpairs
+                           then copying the files by applying copyFiles() on each item on the list  using
+                           QtConcurrent::map()*/
 
 signals:
     void copyFinished();/*this signal is emitted everytime a new file has been copied*/
     
-private slots:
-    void refreshFolders(QString folder);/*this slot is called every time a folder is modified. it calls
+public slots:
+    void refreshFolders(QString folder);/*this slot is called every time a folder is modified and also
+                                          called whenever a user wants a folder refresh. it calls
                                           Relaxengine::prepareFilecopy(). if it is already running, it sets
                                           RelaxEngine::pendingRefresh to true*/
 
+private slots:
     void recallRefresh();/*this slot is called at the end of every call to RelaxEngine::prepareFilecopy()
                            it is used to check if any path has been modified during a previous call to
                            RelaxEngine::prepareFileCopy()*/
@@ -92,10 +97,11 @@ private slots:
     void makeSure(QString path);
     
 private:
-    RThread *aThread;
+    static PathList paths;/*member to hold all list of paths and is also the data source for the whole app*/
 
-    static PathList paths;
-    static QFutureWatcher<void> *future;
+    static QFutureWatcher<void> *future;/*the overall future watcher for progress reports. for more info
+                                          on future watcher. see qt docs for more on QFutureWatcher*/
+
     static WatcherThread* watcher;
     static bool isCopying;
     static bool pendingRefresh;
