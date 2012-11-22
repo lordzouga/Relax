@@ -10,6 +10,7 @@
 #include "rtablemodel.h"
 #include "rlistmodel.h"
 
+const char *unixFonts = "\nQTabBar::tab, QLabel {font-weight: bold; font-size: 11px; color: #ffffff}";
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -25,15 +26,28 @@ MainWindow::MainWindow(QWidget *parent) :
     QFutureWatcher<void> *watcher = engine->getFutureWatcher();
 
     ui->tabWidget->setTabText(0, "Set Origin Folders");
-    ui->tabWidget->setTabText(1, "Set Preferred Folders");
+    ui->tabWidget->setTabText(1, "Set Choice Folders");
 
     ui->destTableView->setModel(tableModel);
     ui->sourceListView->setModel(listModel);
 
+
     ui->destTableView->setColumnWidth(0, 204);
-    ui->destTableView->setColumnWidth(1, 151);
+    ui->destTableView->setColumnWidth(1, 156);
 
     ui->destTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->destTableView->setSelectionMode(QAbstractItemView::SingleSelection);
+
+    QFile styleFile(":/style/style.qss");
+    styleFile.open(QFile::ReadOnly);
+
+    QString styleString = tr(styleFile.readAll());
+
+#ifndef Q_WS_WIN
+    styleString.append(unixFonts);
+#endif
+
+    qApp->setStyleSheet(styleString);
 
     loadSettings();
 
@@ -47,7 +61,7 @@ MainWindow::MainWindow(QWidget *parent) :
     if(count == 1)
 */
 
-    ui->progressBar->hide();
+    //ui->progressBar->hide();
     populateView();
 
 
@@ -238,7 +252,10 @@ void MainWindow::addDestPath()
     QString dest = ui->destPathEdit->text();
     QString filters  = ui->nameFilterEdit->text();
 
-    if(!dest.isEmpty() || !filters.isEmpty()){
+    qDebug() << "destination" << dest;
+    qDebug() << "filters" << filters;
+
+    if(!filters.isEmpty() && !dest.isEmpty()){
          QString str = filters.remove(" ");
         FilterPair pair;
         QStringList filterList = str.split(",", QString::SkipEmptyParts);

@@ -1,4 +1,4 @@
-#include "rlistmodel.h"
+#include "src/rlistmodel.h"
 
 RListModel::RListModel(QObject *parent) :
     QAbstractListModel(parent)

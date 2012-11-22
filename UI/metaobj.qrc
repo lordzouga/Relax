@@ -1,0 +1,26 @@
+<RCC>
+    <qresource prefix="/">
+        <file>style/style.qss</file>
+        <file>style/images/bg.png</file>
+        <file>style/images/popup.png</file>
+        <file>style/images/inset.png</file>
+        <file>style/images/LineEdit.png</file>
+        <file>style/images/BrowseButton.png</file>
+        <file>style/images/addButton.png</file>
+        <file>style/images/listView.png</file>
+        <file>style/images/highlight.png</file>
+        <file>style/images/editButton.png</file>
+        <file>style/images/deleteButton.png</file>
+        <file>style/images/tabButtonSelected.png</file>
+        <file>style/images/tabButtonNormal.png</file>
+        <file>style/images/menuBar.png</file>
+        <file>style/images/header.png</file>
+        <file>style/images/tableView.png</file>
+        <file>style/images/combo.png</file>
+        <file>style/images/arrow.png</file>
+        <file>style/images/progressBg.png</file>
+        <file>style/images/progressChunk.png</file>
+        <file>style/images/delete.png</file>
+        <file>style/images/Edit.png</file>
+    </qresource>
+</RCC>

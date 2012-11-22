@@ -1,0 +1,191 @@
+/*style for Relax!*/
+
+QMainWindow> .QWidget{
+    background-color: "black";
+    background-image: url(":/style/images/bg.png");
+    font-size: 12px;
+    }
+
+QTabWidget::pane{
+    border: 1px solid #282d34;
+    border-radius: 8px;
+    }
+QTabWidget{
+    border-radius: 4px;
+    color: #FFFFFF;
+    }
+
+QTabWidget::tab-bar{
+    left: 5px; top: 7px;
+    }
+
+QTabBar::tab{
+    background-image: url(":style/images/tabButtonNormal.png");
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-color: #a8aec2;
+    color: #ffffff;
+    border-bottom-width: 2px;
+    height: 28px; width: 118px; padding: 2px
+    }
+
+QTabBar::tab:selected{
+    background-image: url(":style/images/tabButtonSelected.png");
+    height: 27px; width: 116px;
+    }
+
+QAbstractItemView{
+    background-color: "black";
+    background-image: url(":style/images/inset.png");
+    border-radius: 5px;
+    color: #acb3bf
+}
+
+
+QLineEdit{
+    border-radius: 3px;
+    color: #ffffff;
+    background-image: url(":style/images/LineEdit.png");
+    /*background-repeat: no-repeat;*/
+    background-color: #282d34;
+    padding-left: 10px;
+    }
+
+#browseSourcePathButton,#browseDestPathButton{
+ border-radius: 3px;
+ background-image: url(":style/images/BrowseButton.png");
+ background-color: #282d34;
+ }
+QPushButton#addSourcePathButton, #addDestPathButton{
+    border-radius: 3px;
+    background-image: url(":style/images/addButton.png");
+    }
+
+QPushButton{
+    color: #ffffff;
+    border-radius: 3px;
+    background-image: url(":style/images/editButton.png");
+    }
+
+QPushButton#deleteSourcePathButton, #destPathDeleteButton{
+    border-radius: 3px;
+    background-image: url(":style/images/deleteButton.png");
+    padding-left: 3px;
+    }
+
+QPushButton:pressed{
+    border-width: 3px; border-color: #282d34;
+    }
+
+QListView{
+    border-radius: 3px;
+    background-image: url(":style/images/listView.png");
+    }
+
+QListView::item{
+    height: 25px; padding-left: 20px;
+    color: #acb3bf
+    }
+QListView::item:selected{
+    background-image: url(":style/images/highlight.png");
+    color: #ffffff
+}
+
+QMenu{
+    color: "white";
+    background-color: #282d34;
+    width: 100px;
+    }
+
+QMenu::item{
+    color: #acb3bf;
+    height: 20px;
+    width: 100px;
+    padding: 2px;
+    font-family: "Segoe UI";
+    font-size: 13px; font-weight: bold;
+    bottom: 5px;
+}
+
+QMenu::item:selected{
+    background-image: url(":style/images/highlight.png");
+    color: #ffffff;
+}
+
+QMenuBar{
+    background-image: url(":style/images/menuBar.png");
+    background-color: #000000;
+    }
+QMenuBar::item{
+    color: "white";
+    background: transparent;
+    height: 20px;
+    }
+
+QTableView{
+    gridline-color: #282d34;
+    background-image:url(":style/images/tableView.png");
+    border-radius: 3px;
+}
+
+QTableView QAbstractView::item{
+    background-image: url(":style/images/highlight.png");
+}
+QTableView QHeaderView::section{
+    background-color: #4a5360;
+    background-image: url(":style/images/header.png");
+    height: 30px
+    }
+
+QComboBox{
+    border-radius: 13px;
+    background: transparent;
+    padding-left: 15px;
+    color: #ffffff;
+    background-image: url(":style/images/combo.png");
+    }
+
+QComboBox::drop-down{
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    border-left-style: inset;
+    border-left-color: #3a424e;
+    border-left-width: 1px;
+    width: 20px;
+   }
+
+QComboBox::down-arrow{
+    image: url(":style/images/arrow.png");
+}
+
+QComboBox QAbstractItemView{
+    min-height: 90px; max-height: 90px;
+    min-width: 150px; max-width: 150px;
+    top: 5px;
+    }
+
+QComboBox QAbstractItemView::item{
+    min-height: 40px; max-height: 40px;
+}
+
+QToolTip{
+    min-height: 30px; max-height: 30px;
+    background-color: #282d34; font-weight: bold;
+    font-size: 13px; opacity: 12;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 5px;
+    }
+
+QProgressBar{
+    /*background-color: "black";*/
+    border: 3px solid #282d34;
+    border-radius: 4px;
+    background-image: url(":style/images/progressBg.png");
+    text-align: center; color: #acb3bf; font-weight: bold;
+    }
+
+QProgressBar::chunk{
+    background-image: url(":style/images/progressChunk.png");
+    margin: 0px; color: #ffffff;
+}

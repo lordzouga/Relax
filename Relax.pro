@@ -11,19 +11,24 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
-    relaxengine.cpp \
-    rtablemodel.cpp \
-    rlistmodel.cpp \
-    watcherthread.cpp
+    src/mainwindow.cpp \
+    src/relaxengine.cpp \
+    src/rlistmodel.cpp \
+    src/rtablemodel.cpp \
+    src/watcherthread.cpp
 
-HEADERS  += mainwindow.h \
-    relaxengine.h \
-    rtablemodel.h \
-    rlistmodel.h \
-    watcherthread.h
+HEADERS  += \
+    src/mainwindow.h \
+    src/relaxengine.h \
+    src/rlistmodel.h \
+    src/rtablemodel.h \
+    src/watcherthread.h
 
-FORMS    += mainwindow.ui
+FORMS    += \
+    UI/mainwindow.ui
 
 OTHER_FILES += \
-    main.qml
+    QML/main.qml
+
+RESOURCES += \
+    UI/metaobj.qrc

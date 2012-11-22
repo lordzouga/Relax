@@ -1,4 +1,4 @@
-#include "rtablemodel.h"
+#include "src/rtablemodel.h"
 
 #define COLUMN_SIZE 2
 

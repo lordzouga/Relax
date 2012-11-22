@@ -1,7 +1,7 @@
 #include <QDir>
 #include <QtConcurrentMap>
 #include <QString>
-#include "relaxengine.h"
+#include "src/relaxengine.h"
 
 static void copyFiles(CopyPair &aPair); /*copies the file contained in aPair.first to aPair.second and then removes
                                          the file in aPair.first if copy was successful*/

@@ -1,4 +1,4 @@
-#include "watcherthread.h"
+#include "src/watcherthread.h"
 
 WatcherThread::WatcherThread(QObject *parent) :
     QFileSystemWatcher(parent)
