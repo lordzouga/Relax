@@ -3,9 +3,8 @@
 #include <QString>
 #include "src/relaxengine.h"
 
-static void copyFiles(CopyPair &aPair); /*copies the file contained in aPair.first to aPair.second and then removes
+void copyFiles(CopyPair &aPair); /*copies the file contained in aPair.first to aPair.second and then removes
                                          the file in aPair.first if copy was successful*/
-
 //static file definitions
 PathList RelaxEngine::paths = PathList();
 bool RelaxEngine::isCopying = false;
@@ -24,7 +23,7 @@ RelaxEngine::RelaxEngine(QObject *parent) :
 
 }
 
-static void copyFiles(CopyPair &aPair)
+void copyFiles(CopyPair &aPair)
 {
     //this function copies file from the path in aPair.first to apair.second
     //qDebug() << "yay I am with: " << aPair;
@@ -134,6 +133,8 @@ void RelaxEngine::prepareFileCopy()
 
     isCopying = true;
 
+    emit copyStarted();
+
     for(int i = 0; i < paths.baseFilePaths.size(); i++){
         //loop to iterate through the source file paths
 
@@ -161,6 +162,8 @@ void RelaxEngine::prepareFileCopy()
                     if(!(filesToCopy.first == filesToCopy.second))
                         filesList.append(filesToCopy);
                 }
+            }else{
+                emit finalFinish();
             }
         }
     }
@@ -173,6 +176,16 @@ void RelaxEngine::prepareFileCopy()
     if(!future->isRunning()){
       emit copyFinished();
     }
+}
+
+void RelaxEngine::clearWatchPaths()
+{
+    watcher->removePaths(paths.baseFilePaths);
+}
+
+void RelaxEngine::restoreWatchPaths()
+{
+    watcher->addPaths(paths.baseFilePaths);
 }
 
 void RelaxEngine::refreshFolders(QString folder)
@@ -191,10 +204,15 @@ void RelaxEngine::recallRefresh()
     if(pendingRefresh){
         pendingRefresh = false;
         prepareFileCopy();
+        emit finalFinish();
     }
 }
 
 void RelaxEngine::makeSure(QString path)
 {
     qDebug() << "checking" << path;
+}
+
+void RelaxEngine::cancelCopy(){
+    future->cancel();
 }
