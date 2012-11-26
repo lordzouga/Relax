@@ -37,11 +37,11 @@ Item{
             }
         }
     }
-    Image {id: relax; x: 16; y: 76; source: "images/header.png"; opacity: 0; scale: 0.5}
-    Image{id: text1; x: 450; y: 133; source: "images/Text1.png"; opacity: 0}
-    Image{id: text2; x: 450; y: 176; source: "images/Text2.png"; opacity: 0}
-    Image{id: text3; x: 450; y: 222; source: "images/Text3.png"; opacity: 0}
-    Image{id: arrow; x: 16; y: 330; source: "images/Export.png";opacity: 0; scale: 0.5}
+    Image {id: relax; x: 16; y: 76; source: "qrc:/images/header.png"; opacity: 0; scale: 0.5}
+    Image{id: text1; x: 450; y: 133; source: "qrc:/images/Text1.png"; opacity: 0}
+    Image{id: text2; x: 450; y: 176; source: "qrc:/images/Text2.png"; opacity: 0}
+    Image{id: text3; x: 450; y: 222; source: "qrc:/images/Text3.png"; opacity: 0}
+    Image{id: arrow; x: 16; y: 330; source: "qrc:/images/Export.png";opacity: 0; scale: 0.5}
 
     Component.onCompleted: { banner.x = -6}
 }
