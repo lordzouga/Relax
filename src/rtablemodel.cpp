@@ -70,7 +70,7 @@ QVariant RTableModel::headerData(int section, Qt::Orientation orientation, int r
 
 }
 
-bool RTableModel::addFilterPair(FilterPair &pair)
+bool RTableModel::addFilterPair(const FilterPair &pair)
 {
     if(!isExists(pair)){
         beginInsertRows(QModelIndex(), rowCount(), rowCount());
@@ -96,7 +96,7 @@ void RTableModel::removeFilterPair(const QModelIndex aIndex)
     endRemoveRows();
 }
 
-bool RTableModel::isExists(FilterPair &pair)
+bool RTableModel::isExists(const FilterPair &pair)
 {
     for(int i = 0; i < pairs->size(); i++){
          FilterPair aPair = pairs->at(i);

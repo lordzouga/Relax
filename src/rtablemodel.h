@@ -13,9 +13,9 @@ public:
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-    bool addFilterPair(FilterPair &pair);
+    bool addFilterPair(const FilterPair &pair);
     void removeFilterPair(const QModelIndex aIndex);
-    bool isExists(FilterPair &pair);
+    bool isExists(const FilterPair &pair);
 
 
     
