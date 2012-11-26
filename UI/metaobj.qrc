@@ -22,5 +22,6 @@
         <file>style/images/progressChunk.png</file>
         <file>style/images/delete.png</file>
         <file>style/images/Edit.png</file>
+        <file>style/images/refresh.png</file>
     </qresource>
 </RCC>
