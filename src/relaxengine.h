@@ -58,6 +58,10 @@ public:
     PathList getPaths();/*this returns the PathList data member. not used because the data manipulation is
                          done by the model*/
 
+    void clearWatchPaths();
+    void restoreWatchPaths();
+
+
 
     /*Public static member functions*/
     static WatcherThread* getWatcher();/*returns the data member WatcherThread watcher*/
@@ -82,12 +86,16 @@ private:
 
 signals:
     void copyFinished();/*this signal is emitted everytime a new file has been copied*/
+    void copyStarted();
+    void finalFinish();
     
 public slots:
     void refreshFolders(QString folder);/*this slot is called every time a folder is modified and also
                                           called whenever a user wants a folder refresh. it calls
                                           Relaxengine::prepareFilecopy(). if it is already running, it sets
                                           RelaxEngine::pendingRefresh to true*/
+
+    void cancelCopy();
 
 private slots:
     void recallRefresh();/*this slot is called at the end of every call to RelaxEngine::prepareFilecopy()
