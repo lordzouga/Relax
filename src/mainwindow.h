@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QModelIndex>
+#include <QFutureWatcher>
 
 namespace Ui {
 class MainWindow;
@@ -19,6 +20,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     QString getPath();
     void populateView();
+    void connectSignals();
 
 private slots:
     void loadSettings();
@@ -41,12 +43,20 @@ public slots:
     void editFilterPair();
     void editSourcePath();
     void showAbout();
+    void toggleLiveMode(bool checked);
 private:
     Ui::MainWindow *ui;
     RelaxEngine *engine;
     RTableModel *tableModel;
     RListModel *listModel;
     QDeclarativeView *view;
+    QFutureWatcher<void> *watcher;
+    QStringList musicFilters;
+    QStringList documentFilters;
+    QStringList videoFilters;
+    QStringList imageFilters;
+protected:
+    void closeEvent(QCloseEvent *event);
 };
 
 #endif // MAINWINDOW_H
