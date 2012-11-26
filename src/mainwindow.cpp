@@ -5,12 +5,16 @@
 #include <QtConcurrentRun>
 #include <QUrl>
 #include <QSettings>
-#include <QtDeclarative/QDeclarativeView>
+#include <QDeclarativeView>
+#include <QDeclarativeItem>
+#include <QGraphicsObject>
+#include <QDeclarativeEngine>
+#include <QDeclarativeContext>
 #include "relaxengine.h"
 #include "rtablemodel.h"
 #include "rlistmodel.h"
 
-const char *unixFonts = "\nQTabBar::tab, QLabel {font-weight: bold; font-size: 11px; color: #ffffff}";
+const char *unixFonts = "\nQTabBar::tab, QLabel, QLineEdit {font-weight: bold; font-size: 11px; color: #ffffff}";
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -19,11 +23,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
 
+    musicFilters << "*.mp3" << "*.m4a" << "*.ogg";
+    documentFilters << "*.xls" << "*.doc" << "*.txt" << "*.pdf" << "*.epub";
+    videoFilters << "*.avi" << "*.mkv" << "*.mp4";
+    imageFilters << "*.jpg" << "*.png" << "*.gif";
+
     engine = new RelaxEngine(this);
     tableModel = new RTableModel(this);
     listModel = new RListModel(this);
 
-    QFutureWatcher<void> *watcher = engine->getFutureWatcher();
+    watcher = engine->getFutureWatcher();
 
     ui->tabWidget->setTabText(0, "Set Origin Folders");
     ui->tabWidget->setTabText(1, "Set Choice Folders");
@@ -35,8 +44,22 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->destTableView->setColumnWidth(0, 204);
     ui->destTableView->setColumnWidth(1, 156);
 
+    ui->declarativeView->show();
+    QDeclarativeEngine *aEngine = ui->declarativeView->engine();
+    aEngine->rootContext()->setContextProperty("engine", engine);
+
+    QGraphicsObject *object = ui->declarativeView->rootObject();
+    QDeclarativeItem *item = qobject_cast<QDeclarativeItem *>(ui->declarativeView->rootObject());
+
+    connect(item, SIGNAL(startRefresh()), this, SLOT(updateFolders()));
+    connect(item, SIGNAL(stopRefresh()), engine, SLOT(cancelCopy()));
+
+    qDebug() << object->children().size();
+
     ui->destTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->destTableView->setSelectionMode(QAbstractItemView::SingleSelection);
+
+    ui->updateButton->hide();
 
     QFile styleFile(":/style/style.qss");
     styleFile.open(QFile::ReadOnly);
@@ -49,25 +72,36 @@ MainWindow::MainWindow(QWidget *parent) :
 
     qApp->setStyleSheet(styleString);
 
+    connectSignals();
+    qDebug() << qgetenv("USER");
     loadSettings();
 
     setMaximumSize(size());
     setMinimumSize(size());
 
-    /*
-    QSettings settings;
-
-    int count = settings.value("appCount").toInt();
-    if(count == 1)
-*/
-
     //ui->progressBar->hide();
     populateView();
+    reset();
 
 
-    //ui->deleteAction->setEnabled(false);
-    //ui->ed
+}
 
+QString MainWindow::getPath()
+{
+    return QFileDialog::getExistingDirectory(this, "Select Folder", QDir::rootPath());
+}
+
+void MainWindow::populateView()
+{
+    view = new QDeclarativeView();
+    //view->setSource(QUrl::fromLocalFile("main.qml"));
+    view->setMinimumSize(450, 420);
+    view->setMaximumSize(450, 420);
+    view->hide();
+}
+
+void MainWindow::connectSignals()
+{
     connect(ui->browseSourcePathButton, SIGNAL(clicked()), this, SLOT(getSourcePath()));
     connect(ui->addSourcePathButton, SIGNAL(clicked()), this, SLOT(addSourcePath()));
 
@@ -93,20 +127,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->destPathDeleteButton, SIGNAL(clicked()), this, SLOT(deleteDestPath()));
     connect(ui->destPathEditButton, SIGNAL(clicked()), this, SLOT(editFilterPair()));
 
-}
+    connect(ui->radioButton, SIGNAL(toggled(bool)), this, SLOT(toggleLiveMode(bool)));
 
-QString MainWindow::getPath()
-{
-    return QFileDialog::getExistingDirectory(this, "Select Folder", QDir::rootPath());
-}
-
-void MainWindow::populateView()
-{
-    view = new QDeclarativeView();
-    //view->setSource(QUrl::fromLocalFile("main.qml"));
-    view->setMinimumSize(450, 420);
-    view->setMaximumSize(450, 420);
-    view->hide();
 }
 
 
@@ -196,19 +218,36 @@ void MainWindow::saveSettings()
 
 void MainWindow::reset()
 {
-    //engine->clearPaths();
+   engine->clearPaths();
 
-    QStringList musicFilters;
-    QStringList documentFilters;
-    QStringList videoFilters;
-    QStringList imageFilters;
+    QString username;
 
-    musicFilters << "*.mp3" << "*.m4a" << "*.ogg";
-    documentFilters << "*.xls" << "*.doc" << "*.txt" << "*.pdf" << "*.epub";
-    videoFilters << "*.avi" << "*.mkv" << "*.mp4";
-    imageFilters << "*.jpg" << "*.png" << "*.gif";
+    QString musicPath;
+    QString docPath;
+    QString imagePath;
+    QString videoPath;
 
+#ifdef Q_OS_WIN
+    username = qgetenv("USERNAME");
 
+    musicPath = "C:\\Users\\" + username + "\\Music";
+    docPath = "C:\\Users\\" + username + "\\Documents";
+    imagePath = "C:\\Users\\" + username + "\\Pictures";
+    videoPath = "C:\\Users\\" + username + "\\videos";
+#endif //Q_WS_WIN
+
+#ifdef Q_OS_UNIX
+    username = qgetenv("USER");
+    musicPath = "/home/" + username + "/Music";
+    docPath = "/home/" + username + "/Documents";
+    imagePath = "/home/" + username + "/Pictures";
+    videoPath = "/home/" + username + "/Videos";
+#endif //Q_OS_UNIX
+
+    tableModel->addFilterPair(FilterPair(musicPath, musicFilters));
+    tableModel->addFilterPair(FilterPair(docPath, documentFilters));
+    tableModel->addFilterPair(FilterPair(imagePath, imageFilters));
+    tableModel->addFilterPair(FilterPair(videoPath, videoFilters));
 }
 
 MainWindow::~MainWindow()
@@ -304,14 +343,8 @@ void MainWindow::deleteSourcePath()
 
 void MainWindow::deleteDestPath()
 {
-    QItemSelectionModel* selModel = ui->destTableView->selectionModel();
-
-    QModelIndexList indexList = selModel->selectedIndexes();
-    QModelIndex index;
-
-    foreach(index, indexList){
-        tableModel->removeFilterPair(index);
-    }
+    QModelIndex aIndex = ui->destTableView->currentIndex();
+    tableModel->removeFilterPair(aIndex);
 }
 
 void MainWindow::editFilterPair()
@@ -328,7 +361,6 @@ void MainWindow::editFilterPair()
         if(index.column() == 1)
             ui->nameFilterEdit->setText(index.data().toString());
     }
-
     deleteDestPath();
 }
 
@@ -343,6 +375,22 @@ void MainWindow::editSourcePath()
 
 void MainWindow::showAbout()
 {
-    view->setSource(QUrl::fromLocalFile("main.qml"));
+    view->setSource(QUrl("qrc:/main.qml"));
     view->show();
+}
+
+void MainWindow::toggleLiveMode(bool checked)
+{
+    if(checked){
+        engine->restoreWatchPaths();
+    }
+    else{
+        engine->clearWatchPaths();
+    }
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    saveSettings();
+    event->accept();
 }
