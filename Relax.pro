@@ -28,7 +28,10 @@ FORMS    += \
     UI/mainwindow.ui
 
 OTHER_FILES += \
-    QML/main.qml
+    QML/main.qml \
+    UI/style/style.qss \
+    QML/refresh.qml
 
 RESOURCES += \
-    UI/metaobj.qrc
+    UI/metaobj.qrc \
+    QML/qmlobj.qrc
