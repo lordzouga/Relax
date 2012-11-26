@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>477</width>
-    <height>487</height>
+    <height>525</height>
    </rect>
   </property>
   <property name="font">
@@ -30,7 +30,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>10</y>
+      <y>40</y>
       <width>461</width>
       <height>401</height>
      </rect>
@@ -44,7 +44,7 @@
      </font>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <property name="iconSize">
      <size>
@@ -180,7 +180,7 @@
        <string>Edit</string>
       </property>
       <property name="icon">
-       <iconset resource="../metaobj.qrc">
+       <iconset resource="metaobj.qrc">
         <normaloff>:/style/images/Edit.png</normaloff>:/style/images/Edit.png</iconset>
       </property>
      </widget>
@@ -208,7 +208,7 @@
        <string>Delete</string>
       </property>
       <property name="icon">
-       <iconset resource="../metaobj.qrc">
+       <iconset resource="metaobj.qrc">
         <normaloff>:/style/images/delete.png</normaloff>:/style/images/delete.png</iconset>
       </property>
      </widget>
@@ -379,7 +379,7 @@
        <string>Edit</string>
       </property>
       <property name="icon">
-       <iconset resource="../metaobj.qrc">
+       <iconset resource="metaobj.qrc">
         <normaloff>:/style/images/Edit.png</normaloff>:/style/images/Edit.png</iconset>
       </property>
      </widget>
@@ -407,7 +407,7 @@
        <string>Delete</string>
       </property>
       <property name="icon">
-       <iconset resource="../metaobj.qrc">
+       <iconset resource="metaobj.qrc">
         <normaloff>:/style/images/delete.png</normaloff>:/style/images/delete.png</iconset>
       </property>
      </widget>
@@ -461,11 +461,24 @@
      </widget>
     </widget>
    </widget>
+   <widget class="QProgressBar" name="progressBar">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>460</y>
+      <width>249</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>24</number>
+    </property>
+   </widget>
    <widget class="QPushButton" name="updateButton">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>420</y>
+      <x>250</x>
+      <y>10</y>
       <width>77</width>
       <height>32</height>
      </rect>
@@ -482,17 +495,38 @@
      <string>Refresh</string>
     </property>
    </widget>
-   <widget class="QProgressBar" name="progressBar">
+   <widget class="QDeclarativeView" name="declarativeView">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>425</y>
-      <width>249</width>
-      <height>25</height>
+      <x>390</x>
+      <y>10</y>
+      <width>81</width>
+      <height>29</height>
      </rect>
     </property>
-    <property name="value">
-     <number>24</number>
+    <property name="resizeMode">
+     <enum>QDeclarativeView::SizeRootObjectToView</enum>
+    </property>
+    <property name="source">
+     <url>
+      <string>qrc:/refresh.qml</string>
+     </url>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButton">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>10</y>
+      <width>151</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Turn on Live Mode</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>
@@ -545,8 +579,15 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QDeclarativeView</class>
+   <extends>QGraphicsView</extends>
+   <header>QtDeclarative/QDeclarativeView</header>
+  </customwidget>
+ </customwidgets>
  <resources>
-  <include location="../metaobj.qrc"/>
+  <include location="metaobj.qrc"/>
  </resources>
  <connections/>
 </ui>
