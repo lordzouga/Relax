@@ -16,7 +16,7 @@ QTabWidget{
     }
 
 QTabWidget::tab-bar{
-    left: 5px; top: 7px;
+    left: 110px; top: 7px;
     }
 
 QTabBar::tab{
