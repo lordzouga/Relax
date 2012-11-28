@@ -23,5 +23,7 @@
         <file>style/images/delete.png</file>
         <file>style/images/Edit.png</file>
         <file>style/images/refresh.png</file>
+        <file>style/images/off_ind.png</file>
+        <file>style/images/on_ind.png</file>
     </qresource>
 </RCC>

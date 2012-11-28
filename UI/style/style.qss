@@ -100,6 +100,8 @@ QPushButton:pressed{
 QListView{
     border-radius: 3px;
     background-image: url(":style/images/listView.png");
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     }
 
 QListView::item{
@@ -146,6 +148,8 @@ QTableView{
     gridline-color: #282d34;
     background-image:url(":style/images/tableView.png");
     border-radius: 3px;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
 }
 
 QTableView QAbstractView::item{
