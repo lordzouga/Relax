@@ -91,15 +91,23 @@ MainWindow::MainWindow(QWidget *parent) :
     qApp->setStyleSheet(styleString);
 
     connectSignals();
-    qDebug() << qgetenv("USER");
-    loadSettings();
+
+    /*check if its the first time the application is being run*/
+    QSettings settings;
+    QStringList setList = settings.allKeys();
+
+    if(setList.isEmpty()){
+        reset();//if settings is empty, fill model with default values
+    }else{
+     loadSettings();//load already saved settings
+    }
+
 
     setMaximumSize(size());
     setMinimumSize(size());
 
     //ui->progressBar->hide();
     populateView();
-    reset();
 
 
 }
