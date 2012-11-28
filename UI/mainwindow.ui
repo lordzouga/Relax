@@ -343,7 +343,7 @@
        <rect>
         <x>140</x>
         <y>46</y>
-        <width>191</width>
+        <width>241</width>
         <height>31</height>
        </rect>
       </property>
@@ -411,54 +411,6 @@
         <normaloff>:/style/images/delete.png</normaloff>:/style/images/delete.png</iconset>
       </property>
      </widget>
-     <widget class="QComboBox" name="comboBox">
-      <property name="geometry">
-       <rect>
-        <x>340</x>
-        <y>46</y>
-        <width>103</width>
-        <height>33</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>Segoe UI</family>
-        <pointsize>9</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-      <item>
-       <property name="text">
-        <string>Filters</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Videos</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Archives</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Music</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Documents</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Pictures</string>
-       </property>
-      </item>
-     </widget>
     </widget>
    </widget>
    <widget class="QProgressBar" name="progressBar">
@@ -504,9 +456,6 @@
       <height>29</height>
      </rect>
     </property>
-    <property name="resizeMode">
-     <enum>QDeclarativeView::SizeRootObjectToView</enum>
-    </property>
     <property name="source">
      <url>
       <string>qrc:/refresh.qml</string>
@@ -518,12 +467,20 @@
      <rect>
       <x>20</x>
       <y>10</y>
-      <width>151</width>
-      <height>22</height>
+      <width>191</width>
+      <height>25</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>Segoe UI</family>
+      <pointsize>9</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
     <property name="text">
-     <string>Turn on Live Mode</string>
+     <string>Switch Live Mode</string>
     </property>
     <property name="checked">
      <bool>true</bool>

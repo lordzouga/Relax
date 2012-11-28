@@ -1,3 +1,21 @@
+/*
+Copyright: 2012 LORDZOUGA <ozojiechikelu@gmail.com>
+License: GPL-2+
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>
+
+*/
+
 /*style for Relax!*/
 
 QMainWindow> .QWidget{
@@ -60,7 +78,9 @@ QPushButton#addSourcePathButton, #addDestPathButton{
     border-radius: 3px;
     background-image: url(":style/images/addButton.png");
     }
-
+QAbstractButton{
+    color: #ffffff;
+    }
 QPushButton{
     color: #ffffff;
     border-radius: 3px;
@@ -159,13 +179,8 @@ QComboBox::down-arrow{
 }
 
 QComboBox QAbstractItemView{
-    min-height: 90px; max-height: 90px;
-    min-width: 150px; max-width: 150px;
-    top: 5px;
-    }
-
-QComboBox QAbstractItemView::item{
-    min-height: 40px; max-height: 40px;
+    border: 2px solid darkgray;
+    selection-background-color: white;
 }
 
 QToolTip{
@@ -179,7 +194,7 @@ QToolTip{
 
 QProgressBar{
     /*background-color: "black";*/
-    border: 3px solid #282d34;
+    border: 2px solid #282d34;
     border-radius: 4px;
     background-image: url(":style/images/progressBg.png");
     text-align: center; color: #acb3bf; font-weight: bold;
@@ -188,4 +203,22 @@ QProgressBar{
 QProgressBar::chunk{
     background-image: url(":style/images/progressChunk.png");
     margin: 0px; color: #ffffff;
+}
+
+QLabel{
+    color: #ffffff;
+    }
+
+QRadioButton::indicator{
+    width: 66px;;
+    height: 27px
+    }
+
+QRadioButton::indicator::unchecked{
+    color: #ffffff;
+    image: url(":style/images/off_ind.png");
+    }
+
+QRadioButton::indicator::checked{
+    image: url(":style/images/on_ind.png");
 }
