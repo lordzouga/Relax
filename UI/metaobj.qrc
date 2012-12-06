@@ -25,5 +25,7 @@
         <file>style/images/refresh.png</file>
         <file>style/images/off_ind.png</file>
         <file>style/images/on_ind.png</file>
+        <file>style/images/saveButton.png</file>
+        <file>style/images/disableButton.png</file>
     </qresource>
 </RCC>

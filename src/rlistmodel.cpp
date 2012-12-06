@@ -70,7 +70,9 @@ bool RListModel::addFilePath(const QString &path)
         if(!(QDir(path).exists())){
             return false;
         }
-        RelaxEngine::getWatcher()->addPath(path);
+        if(RelaxEngine::getLiveMode()){
+            RelaxEngine::getWatcher()->addPath(path);
+        }
         beginInsertRows(QModelIndex(), rowCount(), rowCount());
         paths->append(path);
         endInsertRows();

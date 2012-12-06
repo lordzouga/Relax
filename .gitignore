@@ -1,0 +1,6 @@
+#gitignore file to be used for filtering
+*.oa
+*~
+*.pro.user
+Makefile
+Relax

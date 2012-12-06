@@ -21,42 +21,50 @@ Image{
     id: root
     source: "qrc:/style/images/bg.png";
     anchors.centerIn: parent;
-    property bool flipped: false
+    //property bool flipped: false
 
     signal startRefresh();
     signal stopRefresh();
 
     Connections{
         target: engine;
-        onCopyStarted: {if(!flipped) flipped = true;}
-        onFinalFinish: {if(flipped) flipped = false;}
+        onCopyStarted: {flipable.state = "flip"}
+        onFinalFinish: {flipable.state = ""}
     }
 
     Flipable{
-        id: flipable
+        id: flipable;
+        property bool flipped: false
         height: refresh.height; width: refresh.width
+        anchors.fill: parent
         front: Image{id: refresh
             source: "qrc:style/images/editButton.png";
             MouseArea{anchors.fill: parent; onClicked: root.startRefresh();
                 onPressed: {parent.height = 28; parent.width = 72}
                 onReleased: {parent.width = 77; parent.height = 32}
         }
-            Text {id: aText; text: "Refresh"; font.pointSize: 11; font.bold: true; color: "#FFFFFF"
+            Text {id: aText; text: "Refresh"; font.pointSize: 9; font.bold: true; color: "#FFFFFF"
             anchors.centerIn: parent}
     }
         back: Image{id: cancel
             source: "qrc:style/images/deleteButton.png";
-            MouseArea{anchors.fill: parent; onClicked: root.stopRefresh();}
+            MouseArea{anchors.fill: parent; onClicked: root.stopRefresh();
+                onPressed: {parent.height = 28; parent.width = 72}
+                onReleased: {parent.width = 77; parent.height = 32}
+            }
+
+            Text{id: backText; text: "Cancel"; font.pointSize: 9; font.bold: true; color: "#FFFFFF"
+            anchors.centerIn: parent}
         }
 
         transform: Rotation{
-            id: rotation; origin.x: flipable.width/2; origin.y: flipable.height/2;
+            id: rotation; origin.x: 0; origin.y: (flipable.height/2) - 8;
             axis.x: 1; axis.y: 0; axis.z: 0; angle: 0
         }
 
-        states: State{name: "flip"
+        states: State{name: "flip"; //when: flipable.flipped
             PropertyChanges{target: rotation; angle: 180;}
-        when: root.flipped}
+        }
 
         transitions: Transition{
             NumberAnimation{target: rotation; property: "angle"; duration: 500}}

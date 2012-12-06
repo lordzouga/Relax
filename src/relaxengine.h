@@ -94,6 +94,8 @@ public:
                              Mode aMode);/*a static non-class related function that is used to edit
                                            path filters. it modifies all the strings contained in "list"
                                            according to mode*/
+    static bool getLiveMode();
+    static bool setLiveMode(bool live);
 
 private:
 
@@ -104,8 +106,8 @@ private:
 
 signals:
     void copyFinished();/*this signal is emitted everytime a new file has been copied*/
-    void copyStarted();
-    void finalFinish();
+    void copyStarted();/*indicates when a new copy session has started*/
+    void finalFinish();/*indicates when the final there is absolutely no new file to copy*/
     
 public slots:
     void refreshFolders(QString folder);/*this slot is called every time a folder is modified and also
@@ -114,7 +116,8 @@ public slots:
                                           RelaxEngine::pendingRefresh to true*/
 
     void cancelCopy();
-
+    void jusChecking();
+    void checkFinish();
 private slots:
     void recallRefresh();/*this slot is called at the end of every call to RelaxEngine::prepareFilecopy()
                            it is used to check if any path has been modified during a previous call to
@@ -129,6 +132,7 @@ private:
                                           on future watcher. see qt docs for more on QFutureWatcher*/
 
     static WatcherThread* watcher;
+    static bool liveMode;
     static bool isCopying;
     static bool pendingRefresh;
 };

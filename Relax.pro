@@ -30,8 +30,11 @@ FORMS    += \
 OTHER_FILES += \
     QML/main.qml \
     UI/style/style.qss \
-    QML/refresh.qml
+    QML/refresh.qml \
+    relaxIcon.rc
 
 RESOURCES += \
     UI/metaobj.qrc \
     QML/qmlobj.qrc
+
+#win32:RC_FILE = relaxIcon.rc

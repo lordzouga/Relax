@@ -87,14 +87,21 @@ QPushButton{
     background-image: url(":style/images/editButton.png");
     }
 
-QPushButton#deleteSourcePathButton, #destPathDeleteButton{
+QPushButton#deleteSourcePathButton, QPushButton#destPathDeleteButton, QPushButton#cancelButton{
     border-radius: 3px;
     background-image: url(":style/images/deleteButton.png");
-    padding-left: 3px;
     }
 
+QPushButton#saveButton{
+    border-radius: 3px;
+    background-image: url(":style/images/saveButton.png");
+}
+QPushButton:disabled{
+    color: #a4abb5;
+}
 QPushButton:pressed{
-    border-width: 3px; border-color: #282d34;
+    border: 2px solid black;
+    font-size: 8px;
     }
 
 QListView{

@@ -62,7 +62,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->destTableView->setColumnWidth(0, 204);
     ui->destTableView->setColumnWidth(1, 156);
 
-    ui->declarativeView->show();
+    ui->progressBar->hide();
+
+
     QDeclarativeEngine *aEngine = ui->declarativeView->engine();
     aEngine->rootContext()->setContextProperty("engine", engine);
 
@@ -72,12 +74,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(item, SIGNAL(startRefresh()), this, SLOT(updateFolders()));
     connect(item, SIGNAL(stopRefresh()), engine, SLOT(cancelCopy()));
 
+    ui->declarativeView->show();
     qDebug() << object->children().size();
 
     ui->destTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->destTableView->setSelectionMode(QAbstractItemView::SingleSelection);
 
     ui->updateButton->hide();
+    ui->cancelButton->hide();
+
 
     QFile styleFile(":/style/style.qss");
     styleFile.open(QFile::ReadOnly);
@@ -134,8 +139,13 @@ void MainWindow::connectSignals()
     connect(ui->browseDestPathButton, SIGNAL(clicked()), this, SLOT(getDestPath()));
     connect(ui->addDestPathButton, SIGNAL(clicked()), this, SLOT(addDestPath()));
 
-    connect(ui->updateButton, SIGNAL(clicked()), this, SLOT(updateFolders()));
-
+    /*connect(ui->updateButton, SIGNAL(clicked()), this, SLOT(updateFolders()));
+    connect(engine, SIGNAL(copyStarted()), ui->updateButton, SLOT(hide()));
+    connect(engine, SIGNAL(copyStarted()), ui->cancelButton, SLOT(show()));
+    connect(engine, SIGNAL(finalFinish()), ui->cancelButton, SLOT(hide()));
+    connect(engine, SIGNAL(finalFinish()), ui->updateButton, SLOT(show()));
+    connect(ui->cancelButton, SIGNAL(clicked()), engine, SLOT(cancelCopy()));
+*/
     connect(watcher, SIGNAL(started()), ui->progressBar, SLOT(show()));
     connect(watcher, SIGNAL(progressRangeChanged(int,int)), ui->progressBar, SLOT(setRange(int,int)));
     connect(watcher, SIGNAL(progressValueChanged(int)), ui->progressBar, SLOT(setValue(int)));
@@ -155,6 +165,7 @@ void MainWindow::connectSignals()
 
     connect(ui->radioButton, SIGNAL(toggled(bool)), this, SLOT(toggleLiveMode(bool)));
 
+    connect(ui->saveButton, SIGNAL(clicked()), this, SLOT(saveSettings()));
 }
 
 
@@ -260,7 +271,7 @@ void MainWindow::reset()
     docPath = "C:\\Users\\" + username + "\\Documents";
     imagePath = "C:\\Users\\" + username + "\\Pictures";
     videoPath = "C:\\Users\\" + username + "\\videos";
-#endif //Q_WS_WIN
+#endif //Q_OS_WIN
 
 #ifdef Q_OS_UNIX
     username = qgetenv("USER");
@@ -408,9 +419,11 @@ void MainWindow::showAbout()
 void MainWindow::toggleLiveMode(bool checked)
 {
     if(checked){
+        RelaxEngine::setLiveMode(true);
         engine->restoreWatchPaths();
     }
     else{
+        RelaxEngine::setLiveMode(false);
         engine->clearWatchPaths();
     }
 }

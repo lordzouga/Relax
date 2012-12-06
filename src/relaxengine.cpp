@@ -25,6 +25,8 @@ void copyFiles(CopyPair &aPair); /*copies the file contained in aPair.first to a
 PathList RelaxEngine::paths = PathList();
 bool RelaxEngine::isCopying = false;
 bool RelaxEngine::pendingRefresh = false;
+bool RelaxEngine::liveMode = true;
+
 WatcherThread* RelaxEngine::watcher = new WatcherThread();
 QFutureWatcher<void>* RelaxEngine::future = new QFutureWatcher<void>();
 
@@ -36,6 +38,8 @@ RelaxEngine::RelaxEngine(QObject *parent) :
         qDebug() << "dammit";
     connect(watcher, SIGNAL(directoryChanged(QString)), SLOT(makeSure(QString)));
     connect(this, SIGNAL(copyFinished()), SLOT(recallRefresh()));
+    connect(this, SIGNAL(copyStarted()), SLOT(jusChecking()));
+    connect(this, SIGNAL(finalFinish()), SLOT(checkFinish()));
 
 }
 
@@ -117,6 +121,16 @@ void RelaxEngine::formatString(QStringList &list, RelaxEngine::Mode aMode)
         }
 }
 
+bool RelaxEngine::getLiveMode()
+{
+    return liveMode;
+}
+
+bool RelaxEngine::setLiveMode(bool live)
+{
+    liveMode = live;
+}
+
 void RelaxEngine::setBaseFilePaths(const QString &aPath)
 {
     //set the path given by the user as the source file paths
@@ -178,8 +192,6 @@ void RelaxEngine::prepareFileCopy()
                     if(!(filesToCopy.first == filesToCopy.second))
                         filesList.append(filesToCopy);
                 }
-            }else{
-                emit finalFinish();
             }
         }
     }
@@ -189,9 +201,7 @@ void RelaxEngine::prepareFileCopy()
     future->waitForFinished();
     isCopying = false;
 
-    if(!future->isRunning()){
       emit copyFinished();
-    }
 }
 
 void RelaxEngine::clearWatchPaths()
@@ -220,6 +230,7 @@ void RelaxEngine::recallRefresh()
     if(pendingRefresh){
         pendingRefresh = false;
         prepareFileCopy();
+    }else{
         emit finalFinish();
     }
 }
@@ -231,4 +242,14 @@ void RelaxEngine::makeSure(QString path)
 
 void RelaxEngine::cancelCopy(){
     future->cancel();
+}
+
+void RelaxEngine::jusChecking()
+{
+    qDebug() << "I emmited stuff";
+}
+
+void RelaxEngine::checkFinish()
+{
+    qDebug() << "final finish called";
 }
