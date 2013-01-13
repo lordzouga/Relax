@@ -206,6 +206,7 @@ void RelaxEngine::prepareFileCopy()
     //create a future by calling the QtConcurrent::map() with the copyFiles function
     //so that each file in the in filesList gets mapped to the copyFiles function
 #ifdef Q_OS_LINUX
+    trav_dirs(filesList, paths.baseFilePaths, paths.listPairs);
     future->setFuture(QtConcurrent::map(filesList, lin_move));
 #else
     future->setFuture(QtConcurrent::map(filesList, copyFiles));
