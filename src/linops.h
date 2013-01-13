@@ -1,3 +1,20 @@
+/*
+Copyright: 2012 LORDZOUGA <ozojiechikelu@gmail.com>
+License: GPL-2+
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>
+
+*/
 #ifndef LINOPS_H
 #define LINOPS_H
 
@@ -40,8 +57,8 @@ void move_file(const char* source, const char* dest);
 bool is_drive(const char* path);
 
 /**
-  * @abstract compare_paths() checks if the path pointed to by
-  * a_path and b_path resides on the same drive by using ths stat() system call
+  * @abstract compare_drives() checks if the path pointed to by
+  * a_path and b_path resides on the same drive
   *
   * @param a_path path to be compared
   * @param b_path path to be compared
@@ -58,6 +75,65 @@ bool compare_drives(const char* a_path, const char* b_path);
   * @param d_name should hold the extracted string
   */
 void extract_drive_name(const char* path, QString& d_name);
+
+/**
+  * @abstract trav_dirs() walks through the directories supplied in base_paths and
+  * filters the contents with the filters in fil_dirs and returns the found files
+  * and their destination directories in file_list
+  *
+  * @param file_list contains the found files and their supposed destination
+  * @param base_paths contains the list of folders to be traversed
+  * @param fil_dirs contains the filters string and the directory where the filtered
+  * file should be copied to
+  *
+  * @note it uses the ntfw() system call for file system traversal
+  */
+void trav_dirs(CopyList& file_list, const QStringList& base_paths,
+               const QList<FilterPair> &fil_dirs);
+
+/**
+  * @abstract start_trav() is the function called recursively by the nftw() api
+  *
+  * @param path points to the filename the system is currently processing
+  * @param buf is a structure that contains info for the file
+  * @param typeflag is a flag that determines the type of file referred to by path
+  * @param ft_buf points to a structure that determines the current depth of the traversal
+  *
+  * @returns 0 on success else returns -1
+  */
+int start_trav(const char* path, const struct stat* buf,
+               int typeflag, struct FTW *ft_buf);
+
+/**
+  * @abstract get_dirs() stores the value of p_name in a static variable if it is meant
+  * to be copied
+  *
+  * @param p_name points to the path to be checked
+  *
+  * @returns a QStringList object
+  *
+  * @note if get_dirs() is called with a NULL value, it clears the static variable and
+  * returns its content
+  */
+QStringList get_dirs(const char* p_name);
+
+/**
+  * @abstract process_dirs() checks if the paths contained in dir_list is to be copied. it then copies the
+  * path into file_list
+  *
+  * @param dir_list contains the list of file transfer candidates
+  * @param file_list contains the list files to be transferred
+  * @param fil_pairs contains filters and their corresponding paths
+  */
+void process_dirs(QStringList dir_list, CopyList& file_list,
+                  const QList<FilterPair> &fil_pairs);
+
+/**
+  * @abstract remove_ast() removes the asterik infront of str
+  *
+  * @param str, string to be modified
+  */
+void remove_ast(QString& str);
 #endif //Q_OS_LINUX
 
 #endif // LINOPS_H

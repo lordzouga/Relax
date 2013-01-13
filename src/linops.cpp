@@ -1,8 +1,26 @@
+/*
+Copyright: 2012 LORDZOUGA <ozojiechikelu@gmail.com>
+License: GPL-2+
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>
+
+*/
 #include "linops.h"
 
 #ifdef Q_OS_LINUX
 
 #include <sys/stat.h>
+#include <ftw.h>
 #include <sys/types.h>
 
 /** definition of lin_move()*/
@@ -86,6 +104,108 @@ void extract_drive_name(const char *path, QString &d_name){
     QStringList a_list = s.split('/');
 
     d_name = a_list[2]; //since the drive name is immediately after "media"
+
+}
+
+#define MAX_DESC 150
+void trav_dirs(CopyList &file_list, const QStringList &base_paths,
+               const QList<FilterPair> &fil_dirs){
+    /**
+      * @pre file_list contains list of strings, base_paths contains directory paths,
+      * fil_dir contains filters and directories
+      *
+      * @post file_list might contain more strings, base_paths should remain the same
+      * fil_dirs should remain the same
+      */
+    QString str;
+    foreach(str, base_paths){
+        std::string a_str = str.toStdString();
+        const char *s = a_str.c_str();
+
+        nftw(s, start_trav, MAX_DESC, FTW_MOUNT);
+
+        const char* c = NULL;
+        QStringList dir_list = get_dirs(c);
+
+        process_dirs(dir_list, file_list, fil_dirs);
+    }
+
+}
+
+int start_trav(const char *path, const struct stat *buf,
+               int typeflag, FTW *ft_buf){
+    /**
+      * @pre
+      *
+      * @returns -1 on faliure else returns true
+      */
+
+    if(typeflag == FTW_F){//check if it is a file
+        get_dirs(path);
+    }
+
+    return 0;
+}
+
+QStringList get_dirs(const char *p_name){
+    /**
+      * @pre p_name contains the string to be stored
+      */
+    static QStringList dir_list;
+    if(p_name == NULL){
+        QStringList temp = dir_list;
+        dir_list.empty();
+
+        return temp;
+    }else{
+        QString s(p_name);
+        dir_list.append(s);
+        return QStringList();
+    }
+
+    return QStringList();
+}
+
+void process_dirs(QStringList dir_list, CopyList &file_list,
+                  const QList<FilterPair> &fil_pairs){
+    /**
+      * @pre dir_list contains list of filepaths to be processed, file_list contains
+      * already processed files and fil_pairs contains filters and their directories
+      */
+
+    QString str;
+
+    foreach(str, dir_list){
+        FilterPair a_pair;
+
+        foreach(a_pair, fil_pairs){
+
+            QStringList filters = a_pair.second;
+            QString a_str;
+            foreach(a_str, filters){
+                remove_ast(a_str);
+
+                if(str.endsWith(a_str)){
+                    QFile a_file(str);
+                    QDir a_dir(a_pair.first);
+                    CopyPair p;
+                    p.first = str;
+                    p.second = a_dir.absoluteFilePath(a_file.fileName());
+
+                    file_list.append(p);
+                }
+            }
+        }
+    }
+}
+
+void remove_ast(QString &str){
+    /**
+      * @pre str contains a non-modified string
+      *
+      * @post str contains a modified string
+      */
+    str.remove("*");
 
 }
 
