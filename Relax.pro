@@ -15,14 +15,17 @@ SOURCES += main.cpp\
     src/relaxengine.cpp \
     src/rlistmodel.cpp \
     src/rtablemodel.cpp \
-    src/watcherthread.cpp
+    src/watcherthread.cpp \
+    src/linops.cpp
 
 HEADERS  += \
     src/mainwindow.h \
     src/relaxengine.h \
     src/rlistmodel.h \
     src/rtablemodel.h \
-    src/watcherthread.h
+    src/watcherthread.h \
+    src/linops.h \
+    src/global_defs.h
 
 FORMS    += \
     UI/mainwindow.ui
