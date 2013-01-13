@@ -19,41 +19,13 @@ License: GPL-2+
 #include <QString>
 
 #ifdef Q_OS_LINUX
-/**
-  * @note include for link() and unlink() sytem calls
-  */
-#include <unistd.h>
+#include "linops.h"
 #endif
 
 #include "src/relaxengine.h"
 
 void copyFiles(CopyPair &aPair); /*copies the file contained in aPair.first to aPair.second and then removes
                                          the file in aPair.first if copy was successful*/
-
-#ifdef Q_OS_LINUX
-/**
-  * @def prototype for the linux version of the copy function
-  * it uses system calls for file transfer
-  *
-  * @param pair holds the absolute paths to the file be transferred.
-  * source = pair.first
-  * dest = pair.second
-  *
-  * @note if the file exists on a different drive it uses Qt genric file copy
-  */
-void lin_move(CopyPair &pair);
-
-/**
-  * @def prototype for the move_file() that makes the link() and unlink()
-  * system call on linux
-  *
-  * @param source: holds the path of the file to be moved
-  * @param dest: holds a valid path where the file is to be copied
-  *
-  * @note dest should not be referring to a valid file
-  */
-void move_file(const char* source, const char* dest);
-#endif //Q_OS_LINUX
 
 /**
   * static data defnitions
@@ -92,37 +64,7 @@ void copyFiles(CopyPair &aPair)
     }
 }
 
-#ifdef Q_OS_LINUX
-/** definition of lin_move()*/
-void lin_move(CopyPair &pair){
-    /**
-      * @pre pair contains strings to valid file paths
-      * source = pair.first, dest = pair.second
-      *
-      * @post the file path contained in pair.second now refers to a
-      * valid file
-      */
 
-    QString old_path = pair.first;
-    QString new_path = pair.second;
-
-    std::string s = old_path.toStdString();
-    std::string o = new_path.toStdString();
-
-    move_file(s.c_str(), o.c_str());
-}
-
-void move_file(const char *source, const char *dest){
-    /**
-      * @pre source points to a valid file name. dest doesn't exist
-      *
-      * @post source does not exist. dest points to a valid file name
-      */
-    link(source, dest);
-    unlink(source);
-}
-
-#endif//Q_OS_LINUX
 
 QFutureWatcher<void> *RelaxEngine::getFutureWatcher()
 {
@@ -192,7 +134,7 @@ bool RelaxEngine::getLiveMode()
     return liveMode;
 }
 
-bool RelaxEngine::setLiveMode(bool live)
+void RelaxEngine::setLiveMode(bool live)
 {
     liveMode = live;
 }
@@ -263,7 +205,11 @@ void RelaxEngine::prepareFileCopy()
     }
     //create a future by calling the QtConcurrent::map() with the copyFiles function
     //so that each file in the in filesList gets mapped to the copyFiles function
+#ifdef Q_OS_LINUX
+    future->setFuture(QtConcurrent::map(filesList, lin_move));
+#else
     future->setFuture(QtConcurrent::map(filesList, copyFiles));
+#endif
     future->waitForFinished();
     isCopying = false;
 
