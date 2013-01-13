@@ -19,15 +19,11 @@ License: GPL-2+
 #define RELAXENGINE_H
 
 #include <QObject>
-#include <QPair>
-#include <QStringList>
 #include <QFutureWatcher>
 #include <QDir>
+#include "global_defs.h"
 #include "watcherthread.h"
 
-typedef QPair<QString, QStringList> FilterPair;
-typedef QList<QPair<QString, QString> > CopyList;
-typedef QPair<QString, QString> CopyPair;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct PathList{
@@ -42,6 +38,8 @@ struct PathList{
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void copyFiles(CopyPair &aPair);/*copies the file contained in aPair.first to aPair.second and then removes
+                                         the file in aPair.first if copy was successful*/
 class RelaxEngine : public QObject
 {                                 /*this class by virtue should be instantiated only once throughout the
                                     application. it contains the static data member "PathList::paths"
@@ -95,7 +93,7 @@ public:
                                            path filters. it modifies all the strings contained in "list"
                                            according to mode*/
     static bool getLiveMode();
-    static bool setLiveMode(bool live);
+    static void setLiveMode(bool live);
 
 private:
 
