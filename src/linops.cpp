@@ -55,8 +55,8 @@ void move_file(const char *source, const char *dest){
       *
       * @post source does not exist. dest points to a valid file name
       */
-    link(source, dest);
-    unlink(source);
+    if(link(source, dest) == 0)
+        unlink(source);
 }
 
 bool is_drive(const char *path){
@@ -117,6 +117,7 @@ void trav_dirs(CopyList &file_list, const QStringList &base_paths,
       * @post file_list might contain more strings, base_paths should remain the same
       * fil_dirs should remain the same
       */
+    file_list.empty();
     QString str;
     foreach(str, base_paths){
         std::string a_str = str.toStdString();
@@ -156,6 +157,7 @@ QStringList get_dirs(const char *p_name){
         QStringList temp = dir_list;
         dir_list.empty();
 
+        qDebug() << "files found are " << temp;
         return temp;
     }else{
         QString s(p_name);
@@ -173,6 +175,7 @@ void process_dirs(QStringList dir_list, CopyList &file_list,
       * already processed files and fil_pairs contains filters and their directories
       */
 
+    qDebug() << "list gotten is " << dir_list;
     QString str;
 
     foreach(str, dir_list){
@@ -186,11 +189,15 @@ void process_dirs(QStringList dir_list, CopyList &file_list,
                 remove_ast(a_str);
 
                 if(str.endsWith(a_str)){
-                    QFile a_file(str);
-                    QDir a_dir(a_pair.first);
                     CopyPair p;
+                    QString f_name;
+
+                    get_file_name(str, f_name);
+
                     p.first = str;
-                    p.second = a_dir.absoluteFilePath(a_file.fileName());
+                    p.second = a_pair.first;
+                    p.second.append("/");
+                    p.second.append(f_name);
 
                     file_list.append(p);
                 }
@@ -207,6 +214,20 @@ void remove_ast(QString &str){
       */
     str.remove("*");
 
+}
+
+void get_file_name(const QString &path, QString &f_name){
+    /**
+      * @pre f_name is empty
+      *
+      * @post f_name contains a filename
+      */
+
+    QString t = path;
+
+    QStringList t_list = t.split("/");
+
+    f_name = t_list.back();
 }
 
 #endif//Q_OS_LINUX

@@ -118,8 +118,8 @@ int start_trav(const char* path, const struct stat* buf,
 QStringList get_dirs(const char* p_name);
 
 /**
-  * @abstract process_dirs() checks if the paths contained in dir_list is to be copied. it then copies the
-  * path into file_list
+  * @abstract process_dirs() checks if the paths contained in dir_list is to be copied. it then copies
+  * the path into file_list
   *
   * @param dir_list contains the list of file transfer candidates
   * @param file_list contains the list files to be transferred
@@ -134,6 +134,13 @@ void process_dirs(QStringList dir_list, CopyList& file_list,
   * @param str, string to be modified
   */
 void remove_ast(QString& str);
+/**
+  * @abstract get_file_name() extracts the filename in path and puts it in f_name
+  *
+  * @param path: string to be searched for filename
+  * @param f_name: variable to hold the found filename
+  */
+void get_file_name(const QString& path, QString &f_name);
 #endif //Q_OS_LINUX
 
 #endif // LINOPS_H
