@@ -157,7 +157,6 @@ QStringList get_dirs(const char *p_name){
         QStringList temp = dir_list;
         dir_list.empty();
 
-        qDebug() << "files found are " << temp;
         return temp;
     }else{
         QString s(p_name);
@@ -175,7 +174,6 @@ void process_dirs(QStringList dir_list, CopyList &file_list,
       * already processed files and fil_pairs contains filters and their directories
       */
 
-    qDebug() << "list gotten is " << dir_list;
     QString str;
 
     foreach(str, dir_list){
