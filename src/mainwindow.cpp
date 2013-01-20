@@ -32,6 +32,12 @@ License: GPL-2+
 #include "rtablemodel.h"
 #include "rlistmodel.h"
 
+#define USER_PATH ((QString("/home/"))+(QString(getenv("USER"))))
+#define REFRESH_PATH (QString("/.relax-refresh"))
+#define ADD_FOLDER_PATH (QString("/.relax-add-folder"))
+#define REFRESH_FOLDER_PATH (QString("/.refresh-current-folder"))
+#define FIX_FILE (QString("/.relax-fix-file"))
+
 const char *unixFonts = "\nQTabBar::tab, QLabel, QLineEdit {font-weight: bold; font-size: 11px; color: #ffffff}";
 
 MainWindow::MainWindow(QWidget *parent) :
