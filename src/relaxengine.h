@@ -21,6 +21,7 @@ License: GPL-2+
 #include <QObject>
 #include <QFutureWatcher>
 #include <QDir>
+#include <QStack>
 #include "global_defs.h"
 #include "watcherthread.h"
 
@@ -40,99 +41,228 @@ struct PathList{
 
 void copyFiles(CopyPair &aPair);/*copies the file contained in aPair.first to aPair.second and then removes
                                          the file in aPair.first if copy was successful*/
+/**
+  * @abstract process_dirs() checks if the paths contained in dir_list is to be copied. it then copies
+  * the path into file_list
+  *
+  * @param dir_list contains the list of file transfer candidates
+  * @param file_list contains the list files to be transferred
+  * @param fil_pairs contains filters and their corresponding paths
+  */
+void process_files(QStringList dir_list, CopyList& file_list,
+                  const QList<FilterPair> &fil_pairs);
+
+/**
+  * @note this class by virtue should be instantiated only once throughout the
+  * the application. it contains the static data member PathList::paths that holds
+  * the data to be used throughout the application. it contains a utility function
+  * formatstring() that is used for string manipulations
+  */
 class RelaxEngine : public QObject
-{                                 /*this class by virtue should be instantiated only once throughout the
-                                    application. it contains the static data member "PathList::paths"
-                                    that holds the data to be used throughout the application. it contains
-                                    the utility function formatString() that is used for string manipulatio
-                                    ns outside the class.*/
+{
     Q_OBJECT
+    /** Qt Enum declaration*/
     Q_ENUMS(Mode)
 public:
 
     enum Mode{Remove, Add};
 
-    explicit RelaxEngine(QObject *parent = 0);/*constructor*/
+    /** constructor*/
+    explicit RelaxEngine(QObject *parent = 0);
     //~RelaxEngine();
-    void setBaseFilePaths(const QString &aPath);/*assigns aPath to paths.baseFilePaths*/
+    /** public functions*/
 
-    void setListPairs(const FilterPair &somePair);/*assigns somePair to paths.listPairs*/
+    /**
+      * assigns aPath to paths.baseFilePaths*/
+    void setBaseFilePaths(const QString &aPath);
 
+    /**
+      * assigns somePair to paths.listPairs
+      */
+    void setListPairs(const FilterPair &somePair);
 
-    QFutureWatcher<void>* getFutureWatcher();/*returns a pointer to the QFutureWatcher used for monitoring
-                                               the progress of the file copy. it exits onlt once throughout
-                                               the software*/
+    /** @note getFutureWatcher() returns a pointer to the QFutureWatcher used for monitoring
+      * the progress of the file copy. it exits onlt once throughout
+      * the software
+      */
+    QFutureWatcher<void>* getFutureWatcher();
 
-    void deleteStaticMembers();/*this deletes the static members that are pointers. it should be called only
-                                 once throughout the application. preferrably during the application's
-                                 destruction*/
+   /** deleteStaticMembers() deletes the static members that are pointers. it should be called only
+     * once throughout the application. preferrably during the application's
+     * destruction
+     */
+    void deleteStaticMembers();
 
-    void clearPaths();/*this clears all the data present in the "paths" member variable. did not use it
-                        in this version. as most of the data manipulation is done by the  model*/
+    /**
+      * clearPaths() clears all the data present in the "paths" member variable. did not use it
+      * in this version. as most of the data manipulation is done by the  model
+      * */
+    void clearPaths();
 
+    /**
+      * @note getPaths() returns the PathList data member. not used because the data manipulation is
+      * done by the model
+      */
+    PathList getPaths();
 
-    PathList getPaths();/*this returns the PathList data member. not used because the data manipulation is
-                         done by the model*/
-
+    /**
+      * @note clearWatchPaths() clears watcher of paths to watch
+      */
     void clearWatchPaths();
+
+    /**
+      * @note restoreWatchPaths() restore watcher paths
+      */
     void restoreWatchPaths();
 
+    /** Public static member functions*/
+public:
 
+    /**
+      * @note getWatcher() returns the data member watcher
+      */
+    static WatcherThread* getWatcher();
 
-    /*Public static member functions*/
-    static WatcherThread* getWatcher();/*returns the data member WatcherThread watcher*/
+    /**
+      * @abstract getFilterPairs() returns paths.listpair .
+      *
+      * @abstract not used. prefer data manipulation at the model
+      */
+    static QList<FilterPair> *getFilterPairs();
 
-    static QList<FilterPair> *getFilterPairs();/*returns paths.listpair. not used. prefer data manipulation
-                                                 at the model*/
+    /**
+      * @abstract getBaseFIlePaths returns paths.baseFilePaths.
+      *
+      * @note not used, data manipulation done at the model
+      */
+    static QStringList* getBaseFilePaths();
 
-    static QStringList* getBaseFilePaths();/*returns paths.baseFilepaths. not used. data manipulation done
-                                             at the model*/
-
+    /**
+      * @abstract formatString() a static non related function that
+      * is used to edit path filters.
+      *
+      * @param list: a list of strings to be modified
+      * @param aMode: the mode of the manipulation to be done
+      */
     static void formatString(QStringList& list,
-                             Mode aMode);/*a static non-class related function that is used to edit
-                                           path filters. it modifies all the strings contained in "list"
-                                           according to mode*/
+                             Mode aMode);
+
+    /**
+      * @abstract getliveMode() returns the state of liveMode data members
+      */
     static bool getLiveMode();
+
+    /**
+      * @abstract setLiveMode() sets the value of liveMode data member
+      *
+      * @param live: value to be set
+      */
     static void setLiveMode(bool live);
-
+/**
+  * private members
+  */
 private:
 
-    void prepareFileCopy();/*this function should prepare the files given by the user for copying by filterin
-                           each path with each given filter, appending the found files to a QList of Qpairs
-                           then copying the files by applying copyFiles() on each item on the list  using
-                           QtConcurrent::map()*/
+    /** @abstract prepareFileCopy() should prepare the files given by the user for copying by filterin
+      * each path with each given filter, appending the found files to a QList of Qpairs
+      * then copying the files by applying copyFiles() on each item on the list  using
+      * QtConcurrent::map()
+      * */
+    void prepareFileCopy();
 
+    /**
+      * @abstract prepareFiles() scans the directories contained in pathsToScan and puts
+      * the files found in filesList
+      *
+      * @param fileList: files to be copied
+      * @param pathsToScan: list of paths to be checked for files
+      * @param pair: paths and their corresponding filters
+      *
+      * @return void
+      */
+
+    void prepareFiles(CopyList &filesList, const QStringList& pathsToScan,
+                      const QList<FilterPair> &pair);
+
+    /**
+      * @abstract shallowWalk() gets the files contained in path denoted by walkWay
+      * and returns it in found
+      *
+      * @param walkWay: path to search
+      * @param found contains a list of files found
+      *
+      * @return void
+      */
+    void shallowWalk(QString walkWay, QStringList& found);
+
+    /**
+      * @abstract saveToStack() saves the List copied in the last file transfer to
+      * member variable sessionTransfer
+      *
+      * @param aList: list to be saved
+      */
+    void saveToStack(const CopyList& aList);
+
+    /**
+      * @abstract fixFolder() scans pathToFolder and moves all the files contained in it
+      * to their appropriate folders according to paths.listPairs
+      *
+      * @param pathToFolder: path to scan for files
+      */
+    void fixFolder(const QString pathToFolder);
+
+    /** signals **/
 signals:
-    void copyFinished();/*this signal is emitted everytime a new file has been copied*/
-    void copyStarted();/*indicates when a new copy session has started*/
-    void finalFinish();/*indicates when the final there is absolutely no new file to copy*/
+    /**
+      * copyFinished() signal is emitted everytime a new set of files have been copied*/
+    void copyFinished();
+
+    /** copyStarted() indicates when a new copy session has started*/
+    void copyStarted();
+
+    /** indicates when the final there is absolutely no new file to copy*/
+    void finalFinish();
     
+    /** public slots **/
 public slots:
-    void refreshFolders(QString folder);/*this slot is called every time a folder is modified and also
-                                          called whenever a user wants a folder refresh. it calls
-                                          Relaxengine::prepareFilecopy(). if it is already running, it sets
-                                          RelaxEngine::pendingRefresh to true*/
 
+    /** this slot is called every time a folder is modified and also
+      * called whenever a user wants a folder refresh. it calls
+      * Relaxengine::prepareFilecopy(). if it is already running, it sets
+      * RelaxEngine::pendingRefresh to true*/
+    void refreshFolders(QString folder);
+
+    /**
+      * @abstract cancelCopy() cancels an ongoing copy session
+      */
     void cancelCopy();
-    void jusChecking();
-    void checkFinish();
+
+    /** private slots **/
 private slots:
-    void recallRefresh();/*this slot is called at the end of every call to RelaxEngine::prepareFilecopy()
-                           it is used to check if any path has been modified during a previous call to
-                           RelaxEngine::prepareFileCopy()*/
 
-    void makeSure(QString path);
+    /**
+      * @abstract recallRefresh() slot is called at the end of every call to RelaxEngine::prepareFilecopy()
+      * it is used to check if any path has been modified during a previous call to
+      * RelaxEngine::prepareFileCopy()
+      * */
+    //void recallRefresh();
     
+    /** private data members **/
 private:
-    static PathList paths;/*member to hold all list of paths and is also the data source for the whole app*/
+    /** member to hold all list of paths and is also the data source for the whole app **/
+    static PathList paths;
 
-    static QFutureWatcher<void> *future;/*the overall future watcher for progress reports. for more info
-                                          on future watcher. see qt docs for more on QFutureWatcher*/
-
+    /** future: the overall future watcher for progress reports. for more info
+     * on future watcher. see qt docs for more on QFutureWatcher
+     **/
+    static QFutureWatcher<void> *future;
     static WatcherThread* watcher;
     static bool liveMode;
     static bool isCopying;
     static bool pendingRefresh;
+    static bool scanNested;
+
+    QStack<CopyList> sessionTransfer;
 };
 
 #endif // RELAXENGINE_H
