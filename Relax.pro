@@ -16,7 +16,8 @@ SOURCES += main.cpp\
     src/rlistmodel.cpp \
     src/rtablemodel.cpp \
     src/watcherthread.cpp \
-    src/linops.cpp
+    src/linops.cpp \
+    src/settingswindow.cpp
 
 HEADERS  += \
     src/mainwindow.h \
@@ -25,10 +26,12 @@ HEADERS  += \
     src/rtablemodel.h \
     src/watcherthread.h \
     src/linops.h \
-    src/global_defs.h
+    src/global_defs.h \
+    src/settingswindow.h
 
 FORMS    += \
-    UI/mainwindow.ui
+    UI/mainwindow.ui \
+    UI/settingswindow.ui
 
 OTHER_FILES += \
     QML/main.qml \
