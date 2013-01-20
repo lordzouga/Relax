@@ -22,7 +22,6 @@ License: GPL-2+
 #include <sys/stat.h>
 #include <ftw.h>
 #include <sys/types.h>
-
 /** definition of lin_move()*/
 void lin_move(CopyPair &pair){
     /**
@@ -128,7 +127,7 @@ void trav_dirs(CopyList &file_list, const QStringList &base_paths,
         const char* c = NULL;
         QStringList dir_list = get_dirs(c);
 
-        process_dirs(dir_list, file_list, fil_dirs);
+        process_files(dir_list, file_list, fil_dirs);
     }
 
 }
@@ -167,42 +166,7 @@ QStringList get_dirs(const char *p_name){
     return QStringList();
 }
 
-void process_dirs(QStringList dir_list, CopyList &file_list,
-                  const QList<FilterPair> &fil_pairs){
-    /**
-      * @pre dir_list contains list of filepaths to be processed, file_list contains
-      * already processed files and fil_pairs contains filters and their directories
-      */
 
-    QString str;
-
-    foreach(str, dir_list){
-        FilterPair a_pair;
-
-        foreach(a_pair, fil_pairs){
-
-            QStringList filters = a_pair.second;
-            QString a_str;
-            foreach(a_str, filters){
-                remove_ast(a_str);
-
-                if(str.endsWith(a_str)){
-                    CopyPair p;
-                    QString f_name;
-
-                    get_file_name(str, f_name);
-
-                    p.first = str;
-                    p.second = a_pair.first;
-                    p.second.append("/");
-                    p.second.append(f_name);
-
-                    file_list.append(p);
-                }
-            }
-        }
-    }
-}
 
 void remove_ast(QString &str){
     /**
