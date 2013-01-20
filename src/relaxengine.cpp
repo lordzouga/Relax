@@ -28,47 +28,105 @@ void copyFiles(CopyPair &aPair); /*copies the file contained in aPair.first to a
                                          the file in aPair.first if copy was successful*/
 
 /**
-  * static data defnitions
+  * static data member definitions
   */
 PathList RelaxEngine::paths = PathList();
 bool RelaxEngine::isCopying = false;
 bool RelaxEngine::pendingRefresh = false;
 bool RelaxEngine::liveMode = true;
-
+bool RelaxEngine::scanNested = false;
 WatcherThread* RelaxEngine::watcher = new WatcherThread();
 QFutureWatcher<void>* RelaxEngine::future = new QFutureWatcher<void>();
 
+/**
+  * static auxilliary function prototypes
+  */
+
+/**
+  * @abstract get_nested_files() returns a list of files in a folder an its sub-directories
+  *
+  * @param path contains the path to the folder to scan for files
+  * @param found holds the list of files found
+  *
+  * @return void
+  */
+static void get_nested_files(QString path, QStringList &found);
+
+/**
+  * @abstract get_paths() recursively returns the files contained in a folder
+  * contained in paths
+  *
+  * @param paths holds the list of path to scan
+  */
+static void get_paths(QStringList paths);
+
+/**
+  * @abstract has_children() checks if the folder referred to by path has sub-directories
+  *
+  * @param path: folder to check for sub-directories;
+  *
+  * @return bool: returns true if paths has children else returns false
+  */
+static bool has_children(const QString& path);
+/**
+  * @abstract store_paths() stores the paths contained in aList in static memory
+  *
+  * @param aList: list of paths to store
+  *
+  * @returns the saved list if an empty list is given to it as argument
+  * else it returns a default constructed value
+  */
+static QStringList store_paths(const QStringList &aList);
+
+/**
+  * @abstract get_absolute_file_paths() returns the absolute file paths of the files
+  * contained in str
+  *
+  * @param str contains the path to be scanned
+  *
+  * @returns a list of all the files found
+  */
+static QStringList get_absolute_file_paths(QString str);
+
+/**
+  * @abstract get_absolute_dir_paths() returns the absolute paths of the directories
+  * contained in str
+  *
+  * @returns a QStringList containing the paths of the directories found
+  */
+static QStringList get_absolute_dir_paths(QString str);
+
+/**
+  * @abstract reverseList() takes listToReverse and returns a reversed version of it
+  *
+  * @param listToReverse contains the list to be reversed
+  */
+static void reverseList(CopyList &listToReverse);
+
+/**
+  * constructor definition
+  */
 RelaxEngine::RelaxEngine(QObject *parent) :
     QObject(parent)
 {
     connect(watcher, SIGNAL(directoryChanged(QString)), SLOT(refreshFolders(QString)),
             Qt::DirectConnection);
 
-    connect(watcher, SIGNAL(directoryChanged(QString)), SLOT(makeSure(QString)));
-    connect(this, SIGNAL(copyFinished()), SLOT(recallRefresh()));
+    //connect(this, SIGNAL(copyFinished()), SLOT(recallRefresh()));
 
 }
 
 void copyFiles(CopyPair &aPair)
 {
     //this function copies file from the path in aPair.first to apair.second
-    //qDebug() << "yay I am with: " << aPair;
     QString sourceFilePath = aPair.first;
     QString destFilePath = aPair.second;
 
     QFile handle(sourceFilePath);
 
     if(handle.copy(destFilePath)){//remove the source file if copy was successful
-        //qDebug() << "copy successful";
         handle.remove();
     }
-}
-
-
-
-QFutureWatcher<void> *RelaxEngine::getFutureWatcher()
-{
-    return future;
 }
 
 void RelaxEngine::deleteStaticMembers()
@@ -78,31 +136,37 @@ void RelaxEngine::deleteStaticMembers()
     delete future;
 }
 
-WatcherThread *RelaxEngine::getWatcher()
+void RelaxEngine::undoTransfer()
 {
-    return watcher;
+    if(isCopying)
+        return;
+    isCopying = true;
+
+    CopyList listToUndo;
+    listToUndo = sessionTransfer.pop();
+    reverseList(listToUndo);
+
+#ifdef Q_OS_LINUX
+    future->setFuture(QtConcurrent::map(listToUndo, lin_move));
+#else
+    future->setFuture(QtConcurrent::map(listToUndo, copyFiles));
+#endif
+    redoStack.push(listToUndo);
+    isCopying = false;
 }
 
-
-void RelaxEngine::clearPaths()
+void RelaxEngine::redoTransfer()
 {
-    paths.baseFilePaths.clear();
-    paths.listPairs.clear();
-}
-
-PathList RelaxEngine::getPaths()
-{
-    return paths;
-}
-
-QList<FilterPair>* RelaxEngine::getFilterPairs()
-{
-    return &paths.listPairs;
-}
-
-QStringList *RelaxEngine::getBaseFilePaths()
-{
-    return &paths.baseFilePaths;
+    if(isCopying)
+        return;
+    isCopying = true;
+    CopyList listToRedo = redoStack.pop();
+#ifdef Q_OS_LINUX
+    future->setFuture(QtConcurrent::map(listToRedo, lin_move));
+#else
+    future->setFuture(QtConcurrent::map(listToRedo, copyFiles));
+#endif
+    isCopying = false;
 }
 
 void RelaxEngine::formatString(QStringList &list, RelaxEngine::Mode aMode)
@@ -129,34 +193,9 @@ void RelaxEngine::formatString(QStringList &list, RelaxEngine::Mode aMode)
         }
 }
 
-bool RelaxEngine::getLiveMode()
-{
-    return liveMode;
-}
-
-void RelaxEngine::setLiveMode(bool live)
-{
-    liveMode = live;
-}
-
-void RelaxEngine::setBaseFilePaths(const QString &aPath)
-{
-    //set the path given by the user as the source file paths
-    paths.baseFilePaths << aPath;
-}
-
-void RelaxEngine::setListPairs(const FilterPair &somePair)
-{
-    //add somePair ro the list FilterPair
-    paths.listPairs.append(somePair);
-    //FilterPair is a typedef for QPair<QString, QStringList>
-}
 
 void RelaxEngine::prepareFileCopy()
 {
-    /*this function iterates through the file paths gets the list of files in each list
-     and copies them to their folders by changing the setNamefilters() of each instance.
-    the copy function used is the QtConcurrent::map()*/
 
     if(paths.baseFilePaths.isEmpty() || paths.listPairs.isEmpty() ){
         qDebug() << "no files found";//premature calling of this function
@@ -168,77 +207,102 @@ void RelaxEngine::prepareFileCopy()
 
     if(isCopying)
         return;
-
     isCopying = true;
 
     emit copyStarted();
 
 #ifdef Q_OS_LINUX
-    trav_dirs(filesList, paths.baseFilePaths, paths.listPairs);
+    if(scanNested)
+        trav_dirs(filesList, paths.baseFilePaths, paths.listPairs);
+    else
+        prepareFiles(filesList, paths.baseFilePaths, paths.listPairs);
+
     future->setFuture(QtConcurrent::map(filesList, lin_move));
 #else
-    for(int i = 0; i < paths.baseFilePaths.size(); i++){
-        //loop to iterate through the source file paths
-
-        for(int j = 0; j < paths.listPairs.size(); j++){
-            //loop to iterate through the filters
-            QDir baseDir(paths.baseFilePaths[i]);//create a directory handle
-
-            baseDir.setFilter(QDir::Files);//set filters
-            baseDir.setNameFilters(paths.listPairs[j].second);//set name filters
-
-            qDebug() << "paths and filters used" << paths.listPairs[j];
-
-            QStringList filesFound = baseDir.entryList();//get files
-            QString file;
-
-            if(!filesFound.isEmpty()){//if list is empty then no file was found corresponding to the filters
-
-                foreach(file, filesFound){//for each file found append it to list
-                    CopyPair filesToCopy;
-                    QDir dest(paths.listPairs[j].first);
-
-                    filesToCopy.first = baseDir.absoluteFilePath(file);
-                    filesToCopy.second = dest.absoluteFilePath(file);
-
-                    if(!(filesToCopy.first == filesToCopy.second))
-                        filesList.append(filesToCopy);
-                }
-            }
-        }
-    }
-    //create a future by calling the QtConcurrent::map() with the copyFiles function
-    //so that each file in the in filesList gets mapped to the copyFiles function
-
+    prepareFiles(filesList, paths.baseFilePaths, paths.listPairs);
     future->setFuture(QtConcurrent::map(filesList, copyFiles));
 #endif
     future->waitForFinished();
     isCopying = false;
 
-      emit copyFinished();
+    emit copyFinished();
 }
 
-void RelaxEngine::clearWatchPaths()
+void RelaxEngine::prepareFiles(CopyList &filesList, const QStringList &pathsToScan,
+                               const QList<FilterPair> &pair)
 {
-    watcher->removePaths(paths.baseFilePaths);
+    QString a_path;
+    QStringList founds;
+    foreach(a_path, pathsToScan){
+        if(scanNested){
+            get_nested_files(a_path, founds);
+        }else{
+            shallowWalk(a_path, founds);
+        }
+    }
+    process_files(founds, filesList, pair);
 }
 
-void RelaxEngine::restoreWatchPaths()
+void RelaxEngine::shallowWalk(QString walkWay, QStringList &found)
 {
-    watcher->addPaths(paths.baseFilePaths);
+    found.append(get_absolute_file_paths(walkWay));
+}
+
+void RelaxEngine::fixFolder(const QString pathToFolder)
+{
+
+    if(isCopying)
+        return;
+    isCopying = true;
+
+    CopyList filesToCopy;
+    QStringList pathToScan;
+
+    pathToScan.append(pathToFolder);
+#ifdef Q_OS_LINUX
+    if(scanNested)
+        trav_dirs(filesToCopy, pathToScan, paths.listPairs);
+    else
+        prepareFiles(filesToCopy, pathToScan, paths.listPairs);
+
+    future->setFuture(QtConcurrent::map(filesToCopy, lin_move));
+#else
+    prepareFiles(filesToCopy, pathToScan, paths.listPairs);
+    future->setFuture(QtConcurrent::map(filesToCopy, copyFiles));
+#endif
+
+    future->waitForFinished();
+    isCopying = false;
+}
+
+bool RelaxEngine::canUndo() const
+{
+    if(sessionTransfer.isEmpty())
+        return false;
+    else
+        return true;
+
+    return false;
+}
+
+bool RelaxEngine::canRedo() const
+{
+    if(redoStack.isEmpty())
+        return false;
+    else
+        return true;
+
+    return false;
 }
 
 void RelaxEngine::refreshFolders(QString folder)
 {
-    Q_UNUSED(folder);
 
     if(!isCopying)
-        prepareFileCopy();
-    else
-        pendingRefresh = true;
+        fixFolder(folder);
 }
 
-void RelaxEngine::recallRefresh()
+/*void RelaxEngine::recallRefresh()
 {
     qDebug() << "recall refresh called";
     if(pendingRefresh){
@@ -247,23 +311,147 @@ void RelaxEngine::recallRefresh()
     }else{
         emit finalFinish();
     }
-}
-
-void RelaxEngine::makeSure(QString path)
-{
-    qDebug() << "checking" << path;
-}
+}*/
 
 void RelaxEngine::cancelCopy(){
     future->cancel();
 }
 
-void RelaxEngine::jusChecking()
-{
-    qDebug() << "I emmited stuff";
+void get_nested_files(QString path, QStringList& found){
+
+    QStringList a_list;
+    a_list.append(path);
+
+    get_paths(a_list);
+    found.append(store_paths(QStringList()));
 }
 
-void RelaxEngine::checkFinish()
+void get_paths(QStringList paths){
+    QString str;
+
+    foreach(str, paths){
+        if(has_children(str)){
+            get_paths(get_absolute_dir_paths(str));
+            store_paths(get_absolute_file_paths(str));
+        }
+    }
+}
+
+QStringList get_absolute_file_paths(QString str)
 {
-    qDebug() << "final finish called";
+    QDir a_dir(str);
+    a_dir.setFilter(QDir::Files | QDir::NoDotAndDotDot | QDir::Readable
+                    | QDir::Writable);
+    QStringList found_files = a_dir.entryList();
+    QStringList ret_val;
+    QString s;
+    foreach(s, found_files){
+        ret_val.append(a_dir.absoluteFilePath(s));
+    }
+
+    return ret_val;
+}
+
+bool has_children(const QString &path)
+{
+    QDir a_dir(path);
+    a_dir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Readable |
+                    QDir::Writable);
+    QStringList a_list = a_dir.entryList();
+
+    if(a_list.isEmpty()){
+        return false;
+    }else{
+        return true;
+    }
+
+    return false;
+}
+
+QStringList store_paths(const QStringList &aList){
+
+    static QStringList store;
+    if(aList.isEmpty()){
+        QStringList temp = store;
+        store.empty();
+
+        return temp;
+    }else{
+        store.append(aList);
+        return QStringList();
+    }
+
+    return QStringList();
+}
+
+QStringList get_absolute_dir_paths(QString str){
+    QDir a_dir(str);
+    a_dir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Readable |
+                    QDir::Writable);
+    QString s;
+    QStringList ret_val;
+    QStringList found_dirs = a_dir.entryList();
+    foreach(s, found_dirs){
+        QString path;
+        path.append(str);
+        path.append("/");
+        path.append(s);
+        ret_val.append(path);
+    }
+
+    return ret_val;
+}
+void process_files(QStringList dir_list, CopyList &file_list,
+                  const QList<FilterPair> &fil_pairs){
+    /**
+      * @pre dir_list contains list of filepaths to be processed, file_list contains
+      * already processed files and fil_pairs contains filters and their directories
+      */
+
+    QString str;
+
+    foreach(str, dir_list){
+        FilterPair a_pair;
+
+        foreach(a_pair, fil_pairs){
+
+            QStringList filters = a_pair.second;
+            QString a_str;
+            foreach(a_str, filters){
+                remove_ast(a_str);
+
+                if(str.endsWith(a_str)){
+                    CopyPair p;
+                    QString f_name;
+
+                    get_file_name(str, f_name);
+
+                    p.first = str;
+                    p.second = a_pair.first;
+                    p.second.append("/");
+                    p.second.append(f_name);
+
+                    file_list.append(p);
+                }
+            }
+        }
+    }
+}
+
+void reverseList(CopyList &listToReverse){
+
+    /**
+      * @pre listToReverse contains an unreversed list
+      *
+      * @post listToReverse now contains a reversed list
+      */
+    CopyPair aPair;
+
+    foreach(aPair, listToReverse){
+        QString str = aPair.first;
+
+        aPair.first = aPair.second;
+
+        aPair.second = str;
+    }
 }
