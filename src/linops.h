@@ -117,16 +117,6 @@ int start_trav(const char* path, const struct stat* buf,
   */
 QStringList get_dirs(const char* p_name);
 
-/**
-  * @abstract process_dirs() checks if the paths contained in dir_list is to be copied. it then copies
-  * the path into file_list
-  *
-  * @param dir_list contains the list of file transfer candidates
-  * @param file_list contains the list files to be transferred
-  * @param fil_pairs contains filters and their corresponding paths
-  */
-void process_dirs(QStringList dir_list, CopyList& file_list,
-                  const QList<FilterPair> &fil_pairs);
 
 /**
   * @abstract remove_ast() removes the asterik infront of str
