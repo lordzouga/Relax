@@ -74,18 +74,18 @@ public:
 
     /**
       * assigns aPath to paths.baseFilePaths*/
-    void setBaseFilePaths(const QString &aPath);
+    void setBaseFilePaths(const QString &aPath){ paths.baseFilePaths << aPath; }
 
     /**
       * assigns somePair to paths.listPairs
       */
-    void setListPairs(const FilterPair &somePair);
+    void setListPairs(const FilterPair &somePair){ paths.listPairs.append(somePair); }
 
     /** @note getFutureWatcher() returns a pointer to the QFutureWatcher used for monitoring
       * the progress of the file copy. it exits onlt once throughout
       * the software
       */
-    QFutureWatcher<void>* getFutureWatcher();
+    QFutureWatcher<void>* getFutureWatcher(){return future;}
 
    /** deleteStaticMembers() deletes the static members that are pointers. it should be called only
      * once throughout the application. preferrably during the application's
@@ -97,23 +97,45 @@ public:
       * clearPaths() clears all the data present in the "paths" member variable. did not use it
       * in this version. as most of the data manipulation is done by the  model
       * */
-    void clearPaths();
+    void clearPaths(){paths.baseFilePaths.clear(); paths.listPairs.clear();}
 
     /**
       * @note getPaths() returns the PathList data member. not used because the data manipulation is
       * done by the model
       */
-    PathList getPaths();
+    PathList getPaths(){return paths;}
 
+    /**
+      * @abstract undoTransfer() is used to undo a previous file transfer session
+      * by popping a copyList object from session transfer and using it as the file
+      * transfer object
+      */
+    void undoTransfer();
+
+    /**
+      * @abstract redoTransfer() is used to redo a previous transfer session
+      */
+    void redoTransfer();
     /**
       * @note clearWatchPaths() clears watcher of paths to watch
       */
-    void clearWatchPaths();
+    void clearWatchPaths(){watcher->removePaths(paths.baseFilePaths);}
 
+    /**
+      * @abstract canUndo() returns true if a session can be undone.. required by the GUI to activate
+      * and disable the undo button
+      */
+    bool canUndo() const;
+
+    /**
+      * @abstract canRedo() returns true if a session can be redone. required by the GUI to activate
+      * or disable the redo button
+      */
+    bool canRedo() const;
     /**
       * @note restoreWatchPaths() restore watcher paths
       */
-    void restoreWatchPaths();
+    void restoreWatchPaths(){watcher->addPaths(paths.baseFilePaths);}
 
     /** Public static member functions*/
 public:
@@ -121,21 +143,21 @@ public:
     /**
       * @note getWatcher() returns the data member watcher
       */
-    static WatcherThread* getWatcher();
+    static WatcherThread* getWatcher(){return watcher;}
 
     /**
       * @abstract getFilterPairs() returns paths.listpair .
       *
       * @abstract not used. prefer data manipulation at the model
       */
-    static QList<FilterPair> *getFilterPairs();
+    static QList<FilterPair> *getFilterPairs(){ return &paths.listPairs; }
 
     /**
       * @abstract getBaseFIlePaths returns paths.baseFilePaths.
       *
       * @note not used, data manipulation done at the model
       */
-    static QStringList* getBaseFilePaths();
+    static QStringList* getBaseFilePaths(){ return &paths.baseFilePaths; }
 
     /**
       * @abstract formatString() a static non related function that
@@ -150,14 +172,14 @@ public:
     /**
       * @abstract getliveMode() returns the state of liveMode data members
       */
-    static bool getLiveMode();
+    static bool getLiveMode(){ return liveMode;}
 
     /**
       * @abstract setLiveMode() sets the value of liveMode data member
       *
       * @param live: value to be set
       */
-    static void setLiveMode(bool live);
+    static void setLiveMode(bool live){ liveMode = live;}
 /**
   * private members
   */
@@ -201,7 +223,7 @@ private:
       *
       * @param aList: list to be saved
       */
-    void saveToStack(const CopyList& aList);
+    void saveToStack(const CopyList& aList){sessionTransfer.push(aList);}
 
     /**
       * @abstract fixFolder() scans pathToFolder and moves all the files contained in it
@@ -263,6 +285,7 @@ private:
     static bool scanNested;
 
     QStack<CopyList> sessionTransfer;
+    QStack<CopyList> redoStack;
 };
 
 #endif // RELAXENGINE_H

@@ -201,8 +201,6 @@ void RelaxEngine::prepareFileCopy()
         qDebug() << "no files found";//premature calling of this function
         return;
     }
-    qDebug() << paths.baseFilePaths;
-    qDebug() << paths.listPairs;
     CopyList filesList;//list to hold pairs of file sources and destination
 
     if(isCopying)
