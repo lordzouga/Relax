@@ -34,7 +34,7 @@ License: GPL-2+
 
 #define USER_PATH ((QString("/home/"))+(QString(getenv("USER"))))
 #define REFRESH_PATH (QString("/.relax-refresh"))
-#define ADD_FOLDER_PATH (QString("/.relax-add-folder"))
+#define ADD_FOLDER_PATH (QString("/.relax-comm"))
 #define REFRESH_FOLDER_PATH (QString("/.refresh-current-folder"))
 #define FIX_FILE (QString("/.relax-fix-file"))
 
@@ -57,6 +57,8 @@ MainWindow::MainWindow(QWidget *parent) :
     listModel = new RListModel(this);
 
     watcher = engine->getFutureWatcher();
+    ipcThread = new WatcherThread();
+    ipcThread->addPath(USER_PATH + ADD_FOLDER_PATH);
 
     ui->tabWidget->setTabText(0, "Set Origin Folders");
     ui->tabWidget->setTabText(1, "Set Choice Folders");
@@ -172,6 +174,7 @@ void MainWindow::connectSignals()
     connect(ui->radioButton, SIGNAL(toggled(bool)), this, SLOT(toggleLiveMode(bool)));
 
     connect(ui->saveButton, SIGNAL(clicked()), this, SLOT(saveSettings()));
+    connect(ipcThread, SIGNAL(fileChanged(QString)), SLOT(replyComm(QString)));
 }
 
 
@@ -432,6 +435,19 @@ void MainWindow::toggleLiveMode(bool checked)
         RelaxEngine::setLiveMode(false);
         engine->clearWatchPaths();
     }
+}
+
+void MainWindow::replyComm(QString msg)
+{
+    QFile handle(msg);
+
+    if(handle.open(QIODevice::ReadOnly)){
+        QString path(handle.readAll());
+        if(!path.isEmpty())
+            listModel->addFilePath(path);
+    }
+
+
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

@@ -30,6 +30,7 @@ class RelaxEngine;
 class RTableModel;
 class RListModel;
 class QDeclarativeView;
+class WatcherThread;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -61,6 +62,7 @@ public slots:
     void editSourcePath();
     void showAbout();
     void toggleLiveMode(bool checked);
+    void replyComm(QString msg);
 private:
     Ui::MainWindow *ui;
     RelaxEngine *engine;
@@ -72,6 +74,7 @@ private:
     QStringList documentFilters;
     QStringList videoFilters;
     QStringList imageFilters;
+    WatcherThread *ipcThread;
 protected:
     void closeEvent(QCloseEvent *event);
 };
