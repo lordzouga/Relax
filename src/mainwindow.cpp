@@ -32,13 +32,28 @@ License: GPL-2+
 #include "rtablemodel.h"
 #include "rlistmodel.h"
 
-#define USER_PATH ((QString("/home/"))+(QString(getenv("USER"))))
-#define REFRESH_PATH (QString("/.relax-refresh"))
-#define ADD_FOLDER_PATH (QString("/.relax-comm"))
+#ifdef Q_OS_LINUX
+#define USER_PATH           ((QString("/home/"))+(QString(getenv("USER"))))
+#define REFRESH_PATH        (QString("/.relax-refresh"))
+#define ADD_FOLDER_PATH     (QString("/.relax-add-folder"))
 #define REFRESH_FOLDER_PATH (QString("/.refresh-current-folder"))
-#define FIX_FILE (QString("/.relax-fix-file"))
+#define FIX_FILE            (QString("/.relax-fix-file"))
+#endif
 
 const char *unixFonts = "\nQTabBar::tab, QLabel, QLineEdit {font-weight: bold; font-size: 11px; color: #ffffff}";
+static void checkIfExists(QStringList& files){
+    QString file;
+
+    foreach(file, files){
+        QFile handle(file);
+
+        if(!handle.exists())
+        {
+            handle.open(QIODevice::ReadWrite);
+            handle.close();
+        }
+    }
+}
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -57,15 +72,13 @@ MainWindow::MainWindow(QWidget *parent) :
     listModel = new RListModel(this);
 
     watcher = engine->getFutureWatcher();
-    ipcThread = new WatcherThread();
-    ipcThread->addPath(USER_PATH + ADD_FOLDER_PATH);
+
 
     ui->tabWidget->setTabText(0, "Set Origin Folders");
     ui->tabWidget->setTabText(1, "Set Choice Folders");
 
     ui->destTableView->setModel(tableModel);
     ui->sourceListView->setModel(listModel);
-
 
     ui->destTableView->setColumnWidth(0, 204);
     ui->destTableView->setColumnWidth(1, 156);
@@ -97,11 +110,22 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QString styleString = tr(styleFile.readAll());
 
-#ifndef Q_WS_WIN
+    QStringList filePaths;
+#ifdef Q_OS_LINUX
     styleString.append(unixFonts);
+
+
+    filePaths.append(USER_PATH + REFRESH_PATH);
+    filePaths.append(USER_PATH + ADD_FOLDER_PATH);
+    filePaths.append(USER_PATH + REFRESH_FOLDER_PATH);
+    filePaths.append(USER_PATH + FIX_FILE);
+
+    checkIfExists(filePaths);
 #endif
 
     qApp->setStyleSheet(styleString);
+    ipcThread = new WatcherThread();
+    ipcThread->addPaths(filePaths);
 
     connectSignals();
 
@@ -162,6 +186,8 @@ void MainWindow::connectSignals()
     connect(ui->saveAction, SIGNAL(triggered()), SLOT(saveSettings()));
     connect(ui->exitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(ui->aboutRelax, SIGNAL(triggered()), this, SLOT(showAbout()));
+    connect(ui->actionUndo, SIGNAL(triggered()), SLOT(undo()));
+    connect(ui->actionRedo, SIGNAL(triggered()), SLOT(redo()));
 
     connect(ui->destTableView, SIGNAL(clicked(QModelIndex)), this, SLOT(actiateTableView(QModelIndex)));
     connect(ui->sourceListView, SIGNAL(clicked(QModelIndex)), this, SLOT(activateListView(QModelIndex)));
@@ -175,6 +201,7 @@ void MainWindow::connectSignals()
 
     connect(ui->saveButton, SIGNAL(clicked()), this, SLOT(saveSettings()));
     connect(ipcThread, SIGNAL(fileChanged(QString)), SLOT(replyComm(QString)));
+    connect(engine, SIGNAL(checkUndo()), SLOT(setUndoState()));
 }
 
 
@@ -360,8 +387,7 @@ void MainWindow::addDestPath()
 
 void MainWindow::updateFolders()
 {
-    QString str;
-    QtConcurrent::run(engine, &RelaxEngine::refreshFolders, str);
+    QtConcurrent::run(engine, &RelaxEngine::startTransfer);
 }
 
 void MainWindow::activateListView(QModelIndex aIndex)
@@ -385,6 +411,34 @@ void MainWindow::deleteSourcePath()
     QModelIndex aIndex = ui->sourceListView->currentIndex();
 
     listModel->removeFilePath(aIndex);
+}
+
+void MainWindow::setUndoState()
+{
+    if(engine->canUndo()){
+        ui->actionUndo->setEnabled(true);
+        qDebug() << "can undo";
+    }
+    else
+        ui->actionUndo->setEnabled(false);
+
+    qDebug() << "it has happened";
+
+    if(engine->canRedo()){
+        ui->actionRedo->setEnabled(true);
+    }
+    else
+        ui->actionRedo->setEnabled(false);
+}
+
+void MainWindow::undo()
+{
+    QtConcurrent::run(engine, &RelaxEngine::undoTransfer);
+}
+
+void MainWindow::redo()
+{
+    QtConcurrent::run(engine, &RelaxEngine::redoTransfer);
 }
 
 void MainWindow::deleteDestPath()
@@ -437,14 +491,21 @@ void MainWindow::toggleLiveMode(bool checked)
     }
 }
 
-void MainWindow::replyComm(QString msg)
+void MainWindow::replyComm(QString file)
 {
-    QFile handle(msg);
+    QFile handle(file);
 
     if(handle.open(QIODevice::ReadOnly)){
         QString path(handle.readAll());
-        if(!path.isEmpty())
-            listModel->addFilePath(path);
+        if(!path.isEmpty()){
+
+            if(file == USER_PATH + ADD_FOLDER_PATH)
+                listModel->addFilePath(path);
+            if(file == USER_PATH + REFRESH_PATH)
+                QtConcurrent::run(engine, &RelaxEngine::startTransfer);
+            if(file == USER_PATH + REFRESH_FOLDER_PATH)
+                QtConcurrent::run(engine, &RelaxEngine::fixCurrentDir, path);
+        }
     }
 
 

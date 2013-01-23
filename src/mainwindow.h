@@ -57,12 +57,15 @@ public slots:
     void activateListView(QModelIndex aIndex);
     void actiateTableView(QModelIndex aIndex);
     void deleteSourcePath();
+    void setUndoState();
+    void undo();
+    void redo();
     void deleteDestPath();
     void editFilterPair();
     void editSourcePath();
     void showAbout();
     void toggleLiveMode(bool checked);
-    void replyComm(QString msg);
+    void replyComm(QString file);
 private:
     Ui::MainWindow *ui;
     RelaxEngine *engine;
