@@ -17,16 +17,10 @@
 
 static GObjectClass *parent_class;
 
-static void add_to_relax_callback(NautilusMenuItem* item,
-                                  gpointer user_data)
+static int create_file(const char* filename)
 {
-    gchar* folders;
-    folders = (gchar*)g_object_get_data(G_OBJECT(item), "folder");
-
-    g_print("found this folder %s\n", folders);
     char *home = "/home/";
     char* username = getenv("USER");
-    char* filename = "/.relax-comm";
 
     char path[strlen(home)+strlen(username)+strlen(filename)+1];
 
@@ -37,10 +31,40 @@ static void add_to_relax_callback(NautilusMenuItem* item,
     int fd = open(path, O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP |
                   S_IROTH | S_IWOTH);
 
+    return fd;
+}
 
+static void add_to_relax_callback(NautilusMenuItem* item,
+                                  gpointer user_data)
+{
+    gchar* folders;
+    folders = (gchar*)g_object_get_data(G_OBJECT(item), "folder");
+
+    g_print("found this folder %s\n", folders);
+
+    char* filename = "/.relax-add-folder";
+
+    int fd = create_file(filename);
     if(fd != -1){
         write(fd, (char*)folders, strlen(folders));
     }
+
+    close(fd);
+}
+
+static void refresh_current_folder_callback(NautilusMenuItem* item,
+                                            gpointer user_data)
+{
+    gchar* folder;
+    folder = (gchar*)g_object_get_data(G_OBJECT(item), "folder");
+
+    g_print("refreshing current folder %s\n", folder);
+
+    char* filename = "/.refresh-current-folder";
+
+    int fd = create_file(filename);
+    if(fd != -1)
+        write(fd, (char*)folder, strlen(folder));
 
     close(fd);
 }
@@ -49,6 +73,13 @@ static void refresh_relax_callback(NautilusMenuItem* item,
                                  gpointer user_data)
 {
     g_print("now refreshing...");
+
+    char* refresh_text = "refreshing...";
+    int fd = create_file("/.relax-refresh");
+    if(fd != -1)
+        write(fd, refresh_text, strlen(refresh_text));
+
+    close(fd);
 }
 
 static GList* relax_plugin_get_background_items(NautilusMenuProvider* provider,
@@ -60,6 +91,7 @@ static GList* relax_plugin_get_background_items(NautilusMenuProvider* provider,
     NautilusMenuItem *item;
     NautilusMenuItem *add_item;
     NautilusMenuItem *refresh_item;
+    NautilusMenuItem *refresh_folder_item;
 
     GList* ret_val = NULL;
     GFile* a_file;
@@ -80,9 +112,19 @@ static GList* relax_plugin_get_background_items(NautilusMenuProvider* provider,
                                           NULL);
     g_signal_connect (refresh_item, "activate", refresh_relax_callback, provider);
 
+    refresh_folder_item = nautilus_menu_item_new("RelaxPlugin::refresh-folder",
+                                      "refresh current folder",
+                                      "refreshes the current folder without adding it to relax",
+                                      NULL);
+
+    g_signal_connect (refresh_folder_item, "activate", refresh_current_folder_callback, provider);
+    GFile* s_file = nautilus_file_info_get_location(current_folder);
+    g_object_set_data(G_OBJECT(refresh_folder_item), "folder", (gpointer)g_file_get_path(s_file));
+
     sub_menu = nautilus_menu_new();
     nautilus_menu_append_item(sub_menu, add_item);
     nautilus_menu_append_item(sub_menu, refresh_item);
+    nautilus_menu_append_item(sub_menu, refresh_folder_item);
 
     item = nautilus_menu_item_new("Relax::Plugin",
                                   "relax-file-manager",
@@ -103,7 +145,6 @@ static void relax_plugin_menu_provider_iface_init (NautilusMenuProviderIface *if
 
 static void relax_plugin_instance_init (RelaxPlugin* obj)
 {
-    /*?*/
 }
 
 static void relax_plugin_class_init (RelaxPluginClass* class_obj)
