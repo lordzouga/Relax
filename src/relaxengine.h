@@ -136,6 +136,18 @@ public:
       * @note restoreWatchPaths() restore watcher paths
       */
     void restoreWatchPaths(){watcher->addPaths(paths.baseFilePaths);}
+    /**
+      * @abstract calls prepareFileCopy() to initiate file transfer
+      *
+      */
+    void startTransfer(){prepareFileCopy();}
+
+    /**
+      * @abstract fixCurrentDir() scans the given folder only and move the files
+      * found to their appropriate folder according to paths.listPairs by calling
+      * the fixFolder()
+      */
+    void fixCurrentDir(QString folder){fixFolder(folder);}
 
     /** Public static member functions*/
 public:
@@ -244,6 +256,12 @@ signals:
 
     /** indicates when the final there is absolutely no new file to copy*/
     void finalFinish();
+
+    /**
+      * @abstract undoReady() is used to indicate when to activate the undo button in
+      * in the GUI
+      */
+    void checkUndo();
     
     /** public slots **/
 public slots:
