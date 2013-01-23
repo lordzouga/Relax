@@ -141,6 +141,7 @@ void RelaxEngine::undoTransfer()
     if(isCopying)
         return;
     isCopying = true;
+    emit copyStarted();
 
     CopyList listToUndo;
     listToUndo = sessionTransfer.pop();
@@ -151,8 +152,11 @@ void RelaxEngine::undoTransfer()
 #else
     future->setFuture(QtConcurrent::map(listToUndo, copyFiles));
 #endif
+
     redoStack.push(listToUndo);
     isCopying = false;
+    emit finalFinish();
+    emit checkUndo();
 }
 
 void RelaxEngine::redoTransfer()
@@ -161,12 +165,18 @@ void RelaxEngine::redoTransfer()
         return;
     isCopying = true;
     CopyList listToRedo = redoStack.pop();
+    reverseList(listToRedo);
+
 #ifdef Q_OS_LINUX
     future->setFuture(QtConcurrent::map(listToRedo, lin_move));
 #else
     future->setFuture(QtConcurrent::map(listToRedo, copyFiles));
 #endif
+
+    sessionTransfer.push(listToRedo);
     isCopying = false;
+    emit finalFinish();
+    emit checkUndo();
 }
 
 void RelaxEngine::formatString(QStringList &list, RelaxEngine::Mode aMode)
@@ -223,7 +233,10 @@ void RelaxEngine::prepareFileCopy()
     future->waitForFinished();
     isCopying = false;
 
-    emit copyFinished();
+    sessionTransfer.push(filesList);
+
+    emit finalFinish();
+    emit checkUndo();
 }
 
 void RelaxEngine::prepareFiles(CopyList &filesList, const QStringList &pathsToScan,
@@ -253,6 +266,7 @@ void RelaxEngine::fixFolder(const QString pathToFolder)
         return;
     isCopying = true;
 
+    emit copyStarted();
     CopyList filesToCopy;
     QStringList pathToScan;
 
@@ -271,6 +285,11 @@ void RelaxEngine::fixFolder(const QString pathToFolder)
 
     future->waitForFinished();
     isCopying = false;
+
+    sessionTransfer.push(filesToCopy);
+
+    emit finalFinish();
+    emit checkUndo();
 }
 
 bool RelaxEngine::canUndo() const
@@ -445,11 +464,12 @@ void reverseList(CopyList &listToReverse){
       */
     CopyPair aPair;
 
-    foreach(aPair, listToReverse){
-        QString str = aPair.first;
+    for(int i = 0; i < listToReverse.size(); i++){
+        QString temp;
 
-        aPair.first = aPair.second;
+        temp = listToReverse[i].first;
+        listToReverse[i].first = listToReverse[i].second;
 
-        aPair.second = str;
+        listToReverse[i].second = temp;
     }
 }
