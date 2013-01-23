@@ -40,4 +40,4 @@ void relax_plugin_register_type(GTypeModule *module);
 
 G_END_DECLS
 
-#endif // RELAXPLUGIN_H
+#endif
