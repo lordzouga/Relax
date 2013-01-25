@@ -24,6 +24,15 @@ License: GPL-2+
 
 #include "src/relaxengine.h"
 
+#define RELAX_BEGIN_COPY {if((isCopying) == (true)) return;\
+                                    (isCopying) = (true);\
+                                    emit (copyStarted());}
+
+#define RELAX_END_COPY {(isCopying) = (false);\
+                            emit (finalFinish());\
+                            emit (checkUndo());}
+
+
 void copyFiles(CopyPair &aPair); /*copies the file contained in aPair.first to aPair.second and then removes
                                          the file in aPair.first if copy was successful*/
 
@@ -138,10 +147,7 @@ void RelaxEngine::deleteStaticMembers()
 
 void RelaxEngine::undoTransfer()
 {
-    if(isCopying)
-        return;
-    isCopying = true;
-    emit copyStarted();
+    RELAX_BEGIN_COPY;
 
     CopyList listToUndo;
     listToUndo = sessionTransfer.pop();
@@ -154,16 +160,14 @@ void RelaxEngine::undoTransfer()
 #endif
 
     redoStack.push(listToUndo);
-    isCopying = false;
-    emit finalFinish();
-    emit checkUndo();
+
+    RELAX_END_COPY;
 }
 
 void RelaxEngine::redoTransfer()
 {
-    if(isCopying)
-        return;
-    isCopying = true;
+    RELAX_BEGIN_COPY;
+
     CopyList listToRedo = redoStack.pop();
     reverseList(listToRedo);
 
@@ -174,9 +178,7 @@ void RelaxEngine::redoTransfer()
 #endif
 
     sessionTransfer.push(listToRedo);
-    isCopying = false;
-    emit finalFinish();
-    emit checkUndo();
+    RELAX_END_COPY;
 }
 
 void RelaxEngine::formatString(QStringList &list, RelaxEngine::Mode aMode)
@@ -213,11 +215,7 @@ void RelaxEngine::prepareFileCopy()
     }
     CopyList filesList;//list to hold pairs of file sources and destination
 
-    if(isCopying)
-        return;
-    isCopying = true;
-
-    emit copyStarted();
+    RELAX_BEGIN_COPY;
 
 #ifdef Q_OS_LINUX
     if(scanNested)
@@ -231,12 +229,9 @@ void RelaxEngine::prepareFileCopy()
     future->setFuture(QtConcurrent::map(filesList, copyFiles));
 #endif
     future->waitForFinished();
-    isCopying = false;
-
     sessionTransfer.push(filesList);
 
-    emit finalFinish();
-    emit checkUndo();
+    RELAX_END_COPY;
 }
 
 void RelaxEngine::prepareFiles(CopyList &filesList, const QStringList &pathsToScan,
@@ -262,11 +257,8 @@ void RelaxEngine::shallowWalk(QString walkWay, QStringList &found)
 void RelaxEngine::fixFolder(const QString pathToFolder)
 {
 
-    if(isCopying)
-        return;
-    isCopying = true;
+    RELAX_BEGIN_COPY;
 
-    emit copyStarted();
     CopyList filesToCopy;
     QStringList pathToScan;
 
@@ -284,12 +276,9 @@ void RelaxEngine::fixFolder(const QString pathToFolder)
 #endif
 
     future->waitForFinished();
-    isCopying = false;
-
     sessionTransfer.push(filesToCopy);
 
-    emit finalFinish();
-    emit checkUndo();
+    RELAX_END_COPY;
 }
 
 bool RelaxEngine::canUndo() const
