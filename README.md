@@ -1,4 +1,5 @@
 Relax
 ======
 
-a file manager software that takes advantage of Qt C++'s File System classes: QFileSystemWatcher, QFile and QDir to provide a seemingly automatic file managing experience
+A file managing tool that takes advantage of Qt C++'s Filesystem to provide a seemingly automatic file managing experience
+
